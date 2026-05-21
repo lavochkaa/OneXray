@@ -23,6 +23,7 @@ extension XraySettingStateValidator on XraySettingState {
   void removeWhitespace() {
     name = name.removeWhitespace;
     dns.removeWhitespace();
+    fakeDns.removeWhitespace();
     routing.removeWhitespace();
     inbounds.removeWhitespace();
     outbounds.removeWhitespace();

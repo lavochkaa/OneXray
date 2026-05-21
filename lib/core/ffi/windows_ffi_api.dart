@@ -19,7 +19,7 @@ class WindowsFfiApi extends BaseFfiApi {
 
   static const _coreExe = "OneXrayCore.exe";
 
-  var _coreProcess = 0;
+  HANDLE? _coreProcess;
 
   @override
   Future<bool> startCore(String configPath) async {
@@ -36,29 +36,29 @@ class WindowsFfiApi extends BaseFfiApi {
 
   @override
   void stopCore() {
-    if (_coreProcess == 0) {
+    if (_coreProcess == null) {
       return;
     }
 
-    final processHandle = _coreProcess;
+    final processHandle = _coreProcess!;
     ygLogger("Stopping core process with handle: $processHandle");
 
     final terminateResult = TerminateProcess(processHandle, 0);
-    if (terminateResult == 0) {
-      final errorCode = GetLastError();
-      ygLogger("TerminateProcess failed. errorCode=$errorCode");
-    } else {
+    if (terminateResult.value) {
       final waitResult = WaitForSingleObject(processHandle, 3000);
       ygLogger("Core process termination wait result: $waitResult");
+    } else {
+      final errorCode = GetLastError();
+      ygLogger("TerminateProcess failed. errorCode=$errorCode");
     }
 
     final closeResult = CloseHandle(processHandle);
-    if (closeResult == 0) {
+    if (!closeResult.value) {
       final errorCode = GetLastError();
       ygLogger("CloseHandle failed. errorCode=$errorCode");
     }
 
-    _coreProcess = 0;
+    _coreProcess = null;
   }
 
   String get corePath {
@@ -67,10 +67,10 @@ class WindowsFfiApi extends BaseFfiApi {
     return corePath;
   }
 
-  Tuple2<bool, int> _runCommand(Tuple3<String, String, String> command) {
-    final lpVerb = command.item1.toNativeUtf16();
-    final lpFile = command.item2.toNativeUtf16();
-    final lpParameters = command.item3.toNativeUtf16();
+  Tuple2<bool, HANDLE> _runCommand(Tuple3<String, String, String> command) {
+    final lpVerb = command.item1.toPwstr();
+    final lpFile = command.item2.toPwstr();
+    final lpParameters = command.item3.toPwstr();
 
     final Pointer<SHELLEXECUTEINFO> info = calloc<SHELLEXECUTEINFO>();
     info.ref.cbSize = sizeOf<SHELLEXECUTEINFO>();
@@ -86,6 +86,6 @@ class WindowsFfiApi extends BaseFfiApi {
     free(lpVerb);
     free(lpFile);
     free(lpParameters);
-    return Tuple2(result == TRUE, process);
+    return Tuple2(result.value, process);
   }
 }

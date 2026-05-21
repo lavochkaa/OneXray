@@ -1,6 +1,7 @@
 import 'package:onexray/service/xray/setting/dns_server_state.dart';
 import 'package:onexray/service/xray/setting/dns_state.dart';
 import 'package:onexray/service/xray/setting/enum.dart';
+import 'package:onexray/service/xray/setting/inbounds_state.dart';
 import 'package:onexray/service/xray/setting/log_state.dart';
 import 'package:onexray/service/xray/setting/routing_rule_state.dart';
 import 'package:onexray/service/xray/setting/routing_state.dart';
@@ -22,20 +23,20 @@ extension XraySettingSimpleWriter on XraySettingSimple {
 
     state.routing = _routingState(domain, ip);
     state.dns = _dnsState(domain);
-
-    if (dns == SimpleDns.cloudflareDirect) {
-      state.routing.dnsQueryRule.outboundTag = RoutingOutboundTag.direct.name;
-      state.outbounds.dns.dialerProxy = RoutingOutboundTag.direct.name;
-    } else {
-      state.routing.dnsQueryRule.outboundTag = RoutingOutboundTag.proxy.name;
-      state.outbounds.dns.dialerProxy = RoutingOutboundTag.proxy.name;
+    if (fakeDns) {
+      state.inbounds.tun.sniffing.destOverride.add(
+        InboundSniffingDestOverride.fakednsOthers,
+      );
     }
+
+    state.routing.dnsQueryRule.outboundTag = RoutingOutboundTag.proxy.name;
+    state.outbounds.dns.dialerProxy = RoutingOutboundTag.proxy.name;
 
     return state;
   }
 
   RoutingState _routingState(List<String> domain, List<String> ip) {
-    final rules = <RoutingRuleState>[];
+    final rules = <RoutingRuleState>[_defaultDnsProxyRule()];
     if (routing.localDns) {
       final rule = RoutingRuleState();
       rule.inboundTag = <String>{DNSServerTag.localDns};
@@ -65,6 +66,14 @@ extension XraySettingSimpleWriter on XraySettingSimple {
     return state;
   }
 
+  RoutingRuleState _defaultDnsProxyRule() {
+    final rule = RoutingRuleState();
+    rule.inboundTag = <String>{DNSServerTag.defaultDns};
+    rule.outboundTag = RoutingOutboundTag.proxy.name;
+    rule.ruleTag = RoutingRuleTag.defaultDnsProxy;
+    return rule;
+  }
+
   DnsState _dnsState(List<String> domain) {
     final state = DnsState();
     state.queryStrategy = routing.queryStrategy;
@@ -74,7 +83,11 @@ extension XraySettingSimpleWriter on XraySettingSimple {
     server.queryStrategy = state.queryStrategy;
     server.tag = DNSServerTag.defaultDns;
 
-    final servers = <DnsServerState>[server];
+    final servers = <DnsServerState>[];
+    if (fakeDns) {
+      servers.add(_fakeDnsServer(state.queryStrategy, domain));
+    }
+    servers.add(server);
     if (routing.localDns) {
       final localServer = _localDns(domain);
       localServer.tag = DNSServerTag.localDns;
@@ -85,6 +98,17 @@ extension XraySettingSimpleWriter on XraySettingSimple {
     state.servers = servers;
 
     return state;
+  }
+
+  DnsServerState _fakeDnsServer(
+    DnsQueryStrategy queryStrategy,
+    List<String> domain,
+  ) {
+    final server = DnsServerState();
+    server.address = "fakedns";
+    server.queryStrategy = queryStrategy;
+    server.domains = domain;
+    return server;
   }
 
   DnsServerState _localDns(List<String> domain) {

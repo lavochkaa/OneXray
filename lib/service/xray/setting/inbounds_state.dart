@@ -72,7 +72,9 @@ class InboundTunSettingsState {
 enum InboundSniffingDestOverride {
   http("http"),
   tls("tls"),
-  quic("quic");
+  quic("quic"),
+  fakedns("fakedns"),
+  fakednsOthers("fakedns+others");
 
   const InboundSniffingDestOverride(this.name);
 

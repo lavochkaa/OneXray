@@ -5,6 +5,7 @@ import 'package:onexray/core/db/database/database.dart';
 import 'package:onexray/core/tools/json.dart';
 import 'package:onexray/pages/home/xray/raw_edit/params.dart';
 import 'package:onexray/pages/home/xray/setting/dns/params.dart';
+import 'package:onexray/pages/home/xray/setting/fake_dns/params.dart';
 import 'package:onexray/pages/home/xray/setting/inbounds/params.dart';
 import 'package:onexray/pages/home/xray/setting/log/params.dart';
 import 'package:onexray/pages/home/xray/setting/outbounds/params.dart';
@@ -14,6 +15,7 @@ import 'package:onexray/pages/main/url.dart';
 import 'package:onexray/pages/mixin/alert.dart';
 import 'package:onexray/service/event_bus/service.dart';
 import 'package:onexray/service/xray/setting/dns_state.dart';
+import 'package:onexray/service/xray/setting/fake_dns_state.dart';
 import 'package:onexray/service/xray/setting/inbounds_state.dart';
 import 'package:onexray/service/xray/setting/log_state.dart';
 import 'package:onexray/service/xray/setting/outbounds_state.dart';
@@ -93,6 +95,17 @@ class XraySettingUIController {
     final dns = await context.push<DnsState>(RouterPath.dns, extra: params);
     if (dns != null) {
       _xraySettingState.dns = dns;
+    }
+  }
+
+  Future<void> editFakeDns(BuildContext context) async {
+    final params = FakeDnsParams(_xraySettingState.fakeDns);
+    final fakeDns = await context.push<FakeDnsPoolsState>(
+      RouterPath.fakeDns,
+      extra: params,
+    );
+    if (fakeDns != null) {
+      _xraySettingState.fakeDns = fakeDns;
     }
   }
 

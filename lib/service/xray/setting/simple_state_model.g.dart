@@ -14,6 +14,7 @@ XraySettingSimpleModel _$XraySettingSimpleModelFromJson(
       : SimpleRoutingModel.fromJson(json['routing'] as Map<String, dynamic>),
   (json['dnsId'] as num?)?.toInt(),
   json['enableLog'] as bool?,
+  json['fakeDns'] as bool?,
 );
 
 Map<String, dynamic> _$XraySettingSimpleModelToJson(
@@ -22,6 +23,7 @@ Map<String, dynamic> _$XraySettingSimpleModelToJson(
   'routing': ?instance.routing?.toJson(),
   'dnsId': ?instance.dnsId,
   'enableLog': ?instance.enableLog,
+  'fakeDns': ?instance.fakeDns,
 };
 
 SimpleRoutingModel _$SimpleRoutingModelFromJson(Map<String, dynamic> json) =>

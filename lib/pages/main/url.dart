@@ -29,6 +29,8 @@ import 'package:onexray/pages/home/xray/setting/dns_hosts/page.dart';
 import 'package:onexray/pages/home/xray/setting/dns_hosts/params.dart';
 import 'package:onexray/pages/home/xray/setting/dns_server/page.dart';
 import 'package:onexray/pages/home/xray/setting/dns_server/params.dart';
+import 'package:onexray/pages/home/xray/setting/fake_dns/page.dart';
+import 'package:onexray/pages/home/xray/setting/fake_dns/params.dart';
 import 'package:onexray/pages/home/xray/setting/inbound_ping/page.dart';
 import 'package:onexray/pages/home/xray/setting/inbound_ping/params.dart';
 import 'package:onexray/pages/home/xray/setting/inbound_sniffing/page.dart';
@@ -104,6 +106,7 @@ abstract final class RouterPath {
   static const xraySettingUI = "/xraySettingUI";
   static const xrayLog = "/xrayLog";
   static const dns = "/dns";
+  static const fakeDns = "/fakeDns";
   static const dnsHosts = "/dnsHosts";
   static const dnsServer = "/dnsServer";
   static const routing = "/routing";
@@ -190,6 +193,11 @@ abstract final class RouterPath {
       GoRoute(
         path: RouterPath.dns,
         builder: (_, state) => DnsPage(params: state.extra as DnsParams),
+      ),
+      GoRoute(
+        path: RouterPath.fakeDns,
+        builder: (_, state) =>
+            FakeDnsPage(params: state.extra as FakeDnsParams),
       ),
       GoRoute(
         path: RouterPath.dnsHosts,

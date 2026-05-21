@@ -7,8 +7,14 @@ class XraySettingSimpleModel {
   SimpleRoutingModel? routing;
   int? dnsId;
   bool? enableLog;
+  bool? fakeDns;
 
-  XraySettingSimpleModel(this.routing, this.dnsId, this.enableLog);
+  XraySettingSimpleModel(
+    this.routing,
+    this.dnsId,
+    this.enableLog,
+    this.fakeDns,
+  );
 
   factory XraySettingSimpleModel.fromJson(Map<String, dynamic> json) =>
       _$XraySettingSimpleModelFromJson(json);

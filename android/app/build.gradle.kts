@@ -43,10 +43,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
-        }
-
         // AdMob APPLICATION_ID — read from env var at build time so the real id
         // isn't committed to the repo. Falls back to Google's test App ID so a
         // fresh clone without the env set can still build and run (with test ads).

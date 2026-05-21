@@ -1,7 +1,8 @@
 import 'package:onexray/core/model/xray_json.dart';
 
 extension XrayJsonStandard on XrayJson {
-  static XrayJson get standard => XrayJson(null, null, null, null, null, null);
+  static XrayJson get standard =>
+      XrayJson(null, null, null, null, null, null, null);
 }
 
 extension XrayLogStandard on XrayLog {
@@ -222,4 +223,8 @@ extension XraySockoptStandard on XraySockopt {
 
 extension XrayMuxStandard on XrayMux {
   static XrayMux get standard => XrayMux(null, null, null, null);
+}
+
+extension XrayFakeDnsStandard on XrayFakeDns {
+  static XrayFakeDns get standard => XrayFakeDns(null, null);
 }

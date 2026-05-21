@@ -6,36 +6,45 @@ import 'package:onexray/service/xray/setting/routing_rule_state.dart';
 
 class RoutingRuleDnsDoTCubitState {
   final RoutingRuleState ruleState;
-  final outboundTags = <String>[];
+  final List<String> outboundTags;
   final int version;
 
   RoutingRuleDnsDoTCubitState({
     required this.ruleState,
+    List<String>? outboundTags,
     this.version = 0,
-  });
+  }) : outboundTags = outboundTags ?? <String>[];
 
-  factory RoutingRuleDnsDoTCubitState.initial() => RoutingRuleDnsDoTCubitState(
-        ruleState: RoutingRuleState(),
-      );
+  factory RoutingRuleDnsDoTCubitState.initial() =>
+      RoutingRuleDnsDoTCubitState(ruleState: RoutingRuleState());
 
   RoutingRuleDnsDoTCubitState bumped() => RoutingRuleDnsDoTCubitState(
-        ruleState: ruleState,
-        version: version + 1,
-      );
+    ruleState: ruleState,
+    outboundTags: outboundTags,
+    version: version + 1,
+  );
 }
 
 class RoutingRuleDnsDoTController extends Cubit<RoutingRuleDnsDoTCubitState> {
   final RoutingRuleDnsDoTParams params;
-  RoutingRuleDnsDoTController(this.params) : super(RoutingRuleDnsDoTCubitState.initial()) {
+  RoutingRuleDnsDoTController(this.params)
+    : super(RoutingRuleDnsDoTCubitState.initial()) {
     _initParams();
   }
 
   void _initParams() {
-    emit(RoutingRuleDnsDoTCubitState(ruleState: params.state, version: 1));
+    emit(
+      RoutingRuleDnsDoTCubitState(
+        ruleState: params.state,
+        outboundTags: List.of(params.outboundTags),
+        version: 1,
+      ),
+    );
   }
 
   void updateOutboundTag(String value) {
-    state.ruleState.outboundTag = value; emit(state.bumped());
+    state.ruleState.outboundTag = value;
+    emit(state.bumped());
   }
 
   void save(BuildContext context) {

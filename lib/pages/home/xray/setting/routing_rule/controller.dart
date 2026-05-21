@@ -14,17 +14,27 @@ class XrayRuleAttr {
 
 class RoutingRuleCubitState {
   final RoutingRuleState ruleState;
-  final ruleAttrs = <XrayRuleAttr>[];
-  final outboundTags = <String>[];
+  final List<XrayRuleAttr> ruleAttrs;
+  final List<String> outboundTags;
   final int version;
 
-  RoutingRuleCubitState({required this.ruleState, this.version = 0});
+  RoutingRuleCubitState({
+    required this.ruleState,
+    List<XrayRuleAttr>? ruleAttrs,
+    List<String>? outboundTags,
+    this.version = 0,
+  }) : ruleAttrs = ruleAttrs ?? <XrayRuleAttr>[],
+       outboundTags = outboundTags ?? <String>[];
 
   factory RoutingRuleCubitState.initial() =>
       RoutingRuleCubitState(ruleState: RoutingRuleState());
 
-  RoutingRuleCubitState bumped() =>
-      RoutingRuleCubitState(ruleState: ruleState, version: version + 1);
+  RoutingRuleCubitState bumped() => RoutingRuleCubitState(
+    ruleState: ruleState,
+    ruleAttrs: ruleAttrs,
+    outboundTags: outboundTags,
+    version: version + 1,
+  );
 }
 
 class RoutingRuleController extends Cubit<RoutingRuleCubitState> {
@@ -60,13 +70,17 @@ class RoutingRuleController extends Cubit<RoutingRuleCubitState> {
 
   void _initParams() {
     final initS = params.state;
-    state.outboundTags.clear();
-    state.outboundTags.addAll(params.outboundTags);
     initS.fixOutboundTag(params.outboundTags);
     _initInput(initS);
     _initInputs(initS);
-    _initAttrs(initS);
-    emit(RoutingRuleCubitState(ruleState: initS, version: 1));
+    emit(
+      RoutingRuleCubitState(
+        ruleState: initS,
+        ruleAttrs: _initAttrs(initS),
+        outboundTags: List.of(params.outboundTags),
+        version: 1,
+      ),
+    );
   }
 
   void _initInput(RoutingRuleState state) {
@@ -100,7 +114,7 @@ class RoutingRuleController extends Cubit<RoutingRuleCubitState> {
     this.localIPControllers.addAll(localIPControllers);
   }
 
-  void _initAttrs(RoutingRuleState ruleState) {
+  List<XrayRuleAttr> _initAttrs(RoutingRuleState ruleState) {
     final attrs = <XrayRuleAttr>[];
     ruleState.attrs.forEach((k, v) {
       final attr = XrayRuleAttr();
@@ -108,7 +122,7 @@ class RoutingRuleController extends Cubit<RoutingRuleCubitState> {
       attr.value.text = v;
       attrs.add(attr);
     });
-    state.ruleAttrs.addAll(attrs);
+    return attrs;
   }
 
   final domainControllers = <TextEditingController>[];
@@ -242,6 +256,7 @@ class RoutingRuleController extends Cubit<RoutingRuleCubitState> {
 
   void appendAttr() {
     state.ruleAttrs.add(XrayRuleAttr());
+    emit(state.bumped());
   }
 
   final ruleTagController = TextEditingController();

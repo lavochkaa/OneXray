@@ -7,22 +7,23 @@ import 'package:onexray/service/xray/setting/outbounds_state.dart';
 
 class OutboundDnsCubitState {
   final OutboundDnsState dnsState;
-  final outboundTags = <String>[];
+  final List<String> outboundTags;
   final int version;
 
   OutboundDnsCubitState({
     required this.dnsState,
+    List<String>? outboundTags,
     this.version = 0,
-  });
+  }) : outboundTags = outboundTags ?? <String>[];
 
-  factory OutboundDnsCubitState.initial() => OutboundDnsCubitState(
-        dnsState: OutboundDnsState(),
-      );
+  factory OutboundDnsCubitState.initial() =>
+      OutboundDnsCubitState(dnsState: OutboundDnsState());
 
   OutboundDnsCubitState bumped() => OutboundDnsCubitState(
-        dnsState: dnsState,
-        version: version + 1,
-      );
+    dnsState: dnsState,
+    outboundTags: outboundTags,
+    version: version + 1,
+  );
 }
 
 class OutboundDnsController extends Cubit<OutboundDnsCubitState> {
@@ -40,10 +41,14 @@ class OutboundDnsController extends Cubit<OutboundDnsCubitState> {
 
   void _initParams() {
     final initS = params.state;
-    state.outboundTags.clear();
-    state.outboundTags.addAll(params.outboundTags);
     _initInput(initS);
-    emit(OutboundDnsCubitState(dnsState: initS, version: 1));
+    emit(
+      OutboundDnsCubitState(
+        dnsState: initS,
+        outboundTags: List.of(params.outboundTags),
+        version: 1,
+      ),
+    );
   }
 
   void _initInput(OutboundDnsState state) {
@@ -54,7 +59,8 @@ class OutboundDnsController extends Cubit<OutboundDnsCubitState> {
   void updateNetwork(String value) {
     final network = DnsNetwork.fromString(value);
     if (network != null) {
-      state.dnsState.network = network; emit(state.bumped());
+      state.dnsState.network = network;
+      emit(state.bumped());
     }
   }
 
@@ -64,12 +70,14 @@ class OutboundDnsController extends Cubit<OutboundDnsCubitState> {
   void updateNonIPQuery(String value) {
     final nonIPQuery = DnsNonIPQuery.fromString(value);
     if (nonIPQuery != null) {
-      state.dnsState.nonIPQuery = nonIPQuery; emit(state.bumped());
+      state.dnsState.nonIPQuery = nonIPQuery;
+      emit(state.bumped());
     }
   }
 
   void updateDialerProxy(String value) {
-    state.dnsState.dialerProxy = value; emit(state.bumped());
+    state.dnsState.dialerProxy = value;
+    emit(state.bumped());
   }
 
   void save(BuildContext context) {

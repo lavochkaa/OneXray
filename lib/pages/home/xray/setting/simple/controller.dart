@@ -14,14 +14,13 @@ class XraySettingSimpleCubitState {
     this.version = 0,
   });
 
-  factory XraySettingSimpleCubitState.initial() => XraySettingSimpleCubitState(
-        xraySetting: XraySettingSimple(),
-      );
+  factory XraySettingSimpleCubitState.initial() =>
+      XraySettingSimpleCubitState(xraySetting: XraySettingSimple());
 
   XraySettingSimpleCubitState bumped() => XraySettingSimpleCubitState(
-        xraySetting: xraySetting,
-        version: version + 1,
-      );
+    xraySetting: xraySetting,
+    version: version + 1,
+  );
 }
 
 class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
@@ -36,14 +35,20 @@ class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
   }
 
   void updateEnableLog(bool value) {
-    state.xraySetting.enableLog = value; emit(state.bumped());
+    state.xraySetting.enableLog = value;
+    emit(state.bumped());
+  }
+
+  void updateFakeDns(bool value) {
+    state.xraySetting.fakeDns = value;
+    emit(state.bumped());
   }
 
   void updateDomainStrategy(String value) {
     final domainStrategy = RoutingDomainStrategy.fromString(value);
     if (domainStrategy != null) {
       state.xraySetting.routing.domainStrategy = domainStrategy;
-    emit(state.bumped());
+      emit(state.bumped());
     }
   }
 
@@ -51,7 +56,7 @@ class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
     final queryStrategy = DnsQueryStrategy.fromString(value);
     if (queryStrategy != null) {
       state.xraySetting.routing.queryStrategy = queryStrategy;
-    emit(state.bumped());
+      emit(state.bumped());
     }
   }
 
@@ -59,7 +64,7 @@ class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
     final directSet = SimpleCountry.fromString(value);
     if (directSet != null) {
       state.xraySetting.routing.directSet = directSet;
-    emit(state.bumped());
+      emit(state.bumped());
     }
   }
 
@@ -86,7 +91,8 @@ class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
   Future<void> updateDnsId(int? id) async {
     if (id != null) {
       final dnsId = SimpleDns.fromInt(id);
-      state.xraySetting.dns = dnsId; emit(state.bumped());
+      state.xraySetting.dns = dnsId;
+      emit(state.bumped());
     }
   }
 

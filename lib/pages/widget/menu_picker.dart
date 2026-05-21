@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:onexray/pages/theme/color.dart';
 import 'package:onexray/service/localizations/service.dart';
 
 typedef TextSelectCallback<T extends Object> = Function(T selected);
@@ -9,40 +10,38 @@ class TextMenuPicker<T extends Object> extends StatelessWidget {
   final List<T> selections;
   final TextSelectCallback<T> callback;
 
-  TextMenuPicker({
+  const TextMenuPicker({
     super.key,
     required this.title,
     required this.selections,
     required this.callback,
   });
 
-  final _controller = MenuController();
-
   @override
   Widget build(BuildContext context) {
-    final children = selections
-        .map(
-          (selection) => MenuItemButton(
-            child: Text("$selection"),
-            onPressed: () => callback(selection),
+    final displayTitle = title.isEmpty ? "-" : title;
+    return PopupMenuButton<T>(
+      onSelected: callback,
+      itemBuilder: (context) => selections
+          .map(
+            (selection) =>
+                PopupMenuItem<T>(value: selection, child: Text("$selection")),
+          )
+          .toList(),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: 8,
+          vertical: 8,
+        ),
+        child: Text(
+          displayTitle,
+          style: TextStyle(
+            color: ColorManager.formTitle(context),
+            fontWeight: FontWeight.bold,
           ),
-        )
-        .toList();
-    return MenuAnchor(
-      menuChildren: children,
-      controller: _controller,
-      builder: (_, _, _) =>
-          TextButton(onPressed: () => _onTap(), child: Text(title)),
-      child: Text(title),
+        ),
+      ),
     );
-  }
-
-  void _onTap() {
-    if (_controller.isOpen) {
-      _controller.close();
-    } else {
-      _controller.open();
-    }
   }
 }
 
@@ -145,40 +144,32 @@ class IconMenuPicker extends StatelessWidget {
   final List<IconMenuId> menus;
   final IconMenuCallback callback;
 
-  IconMenuPicker({
+  const IconMenuPicker({
     super.key,
     required this.icon,
     required this.menus,
     required this.callback,
   });
 
-  final _controller = MenuController();
-
   @override
   Widget build(BuildContext context) {
-    final children = menus
-        .map(
-          (menu) => MenuItemButton(
-            leadingIcon: Icon(menu.icon),
-            child: Text(menu.title),
-            onPressed: () => callback(menu.name),
-          ),
-        )
-        .toList();
-    return MenuAnchor(
-      menuChildren: children,
-      controller: _controller,
-      builder: (_, _, _) =>
-          IconButton(onPressed: () => _onTap(), icon: Icon(icon)),
-      child: Icon(icon),
+    return PopupMenuButton<IconMenuId>(
+      icon: Icon(icon),
+      onSelected: (menu) => callback(menu.name),
+      itemBuilder: (context) => menus
+          .map(
+            (menu) => PopupMenuItem<IconMenuId>(
+              value: menu,
+              child: Row(
+                children: [
+                  Icon(menu.icon),
+                  const SizedBox(width: 12),
+                  Text(menu.title),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
-  }
-
-  void _onTap() {
-    if (_controller.isOpen) {
-      _controller.close();
-    } else {
-      _controller.open();
-    }
   }
 }

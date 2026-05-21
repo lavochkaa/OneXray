@@ -49,6 +49,7 @@ class XraySettingSimplePage extends StatelessWidget {
               child: Column(
                 children: [
                   _logSection(context, controller, state),
+                  _fakeDnsSection(context, controller, state),
                   _routingSection(context, controller, state),
                   _dnsSection(context, controller, state),
                 ],
@@ -98,6 +99,26 @@ class XraySettingSimplePage extends StatelessWidget {
           _localDirect(context, controller, state),
           _enableIPRule(context, controller, state),
           _localDns(context, controller, state),
+        ],
+      ),
+    );
+  }
+
+  Widget _fakeDnsSection(
+    BuildContext context,
+    XraySettingSimpleController controller,
+    XraySettingSimpleCubitState state,
+  ) {
+    return SectionView(
+      title: AppLocalizations.of(context)!.fakeDnsPageTitle,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(AppLocalizations.of(context)!.xraySettingSimplePageFakeDns),
+          Switch(
+            value: state.xraySetting.fakeDns,
+            onChanged: (value) => controller.updateFakeDns(value),
+          ),
         ],
       ),
     );

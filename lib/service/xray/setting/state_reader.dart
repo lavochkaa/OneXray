@@ -31,6 +31,7 @@ extension XraySettingStateReader on XraySettingState {
     }
     log.readFromXrayJson(xrayJson);
     dns.readFromXrayJson(xrayJson);
+    fakeDns.readFromXrayJson(xrayJson);
     routing.readFromXrayJson(xrayJson);
     inbounds.readFromXrayJson(xrayJson);
     outbounds.readFromXrayJson(xrayJson);

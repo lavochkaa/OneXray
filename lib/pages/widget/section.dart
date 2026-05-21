@@ -63,16 +63,14 @@ class SectionView extends StatelessWidget {
               ),
             ),
 
-          Container(
-            padding: EdgeInsetsDirectional.all(16),
-            decoration: ShapeDecoration(
-              color: ColorManager.surface(context),
-              shape: RoundedRectangleBorder(
-                side: BorderSide(color: ColorManager.border(context), width: 1),
-                borderRadius: BorderRadiusDirectional.circular(8),
-              ),
+          Material(
+            color: ColorManager.surface(context),
+            shape: _sectionShape(context),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: EdgeInsetsDirectional.all(16),
+              child: child,
             ),
-            child: child,
           ),
         ],
       ),
@@ -118,18 +116,21 @@ class SectionView extends StatelessWidget {
                 ),
               ),
             ),
-          Container(
-            decoration: ShapeDecoration(
-              color: ColorManager.surface(context),
-              shape: RoundedRectangleBorder(
-                side: BorderSide(color: ColorManager.border(context), width: 1),
-                borderRadius: BorderRadiusDirectional.circular(8),
-              ),
-            ),
+          Material(
+            color: ColorManager.surface(context),
+            shape: _sectionShape(context),
+            clipBehavior: Clip.antiAlias,
             child: child,
           ),
         ],
       ),
+    );
+  }
+
+  ShapeBorder _sectionShape(BuildContext context) {
+    return RoundedRectangleBorder(
+      side: BorderSide(color: ColorManager.border(context), width: 1),
+      borderRadius: BorderRadiusDirectional.circular(8),
     );
   }
 }

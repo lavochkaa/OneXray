@@ -55,10 +55,7 @@ class _XraySettingUIPageState extends State<XraySettingUIPage> {
           Expanded(
             child: SingleChildScrollView(
               child: Column(
-                children: [
-                  _nameSection(context),
-                  _editSection(context),
-                ],
+                children: [_nameSection(context), _editSection(context)],
               ),
             ),
           ),
@@ -98,18 +95,31 @@ class _XraySettingUIPageState extends State<XraySettingUIPage> {
             trailing: const Icon(Icons.chevron_right),
           ),
           ListTile(
+            onTap: () => controller.editFakeDns(context),
+            title: Text(
+              AppLocalizations.of(context)!.xraySettingUIPageEditFakeDns,
+            ),
+            trailing: const Icon(Icons.chevron_right),
+          ),
+          ListTile(
             onTap: () => controller.editRouting(context),
-            title: Text(AppLocalizations.of(context)!.xraySettingUIPageEditRouting),
+            title: Text(
+              AppLocalizations.of(context)!.xraySettingUIPageEditRouting,
+            ),
             trailing: const Icon(Icons.chevron_right),
           ),
           ListTile(
             onTap: () => controller.editInbounds(context),
-            title: Text(AppLocalizations.of(context)!.xraySettingUIPageEditInbounds),
+            title: Text(
+              AppLocalizations.of(context)!.xraySettingUIPageEditInbounds,
+            ),
             trailing: const Icon(Icons.chevron_right),
           ),
           ListTile(
             onTap: () => controller.editOutbounds(context),
-            title: Text(AppLocalizations.of(context)!.xraySettingUIPageEditOutbounds),
+            title: Text(
+              AppLocalizations.of(context)!.xraySettingUIPageEditOutbounds,
+            ),
             trailing: const Icon(Icons.chevron_right),
           ),
         ],

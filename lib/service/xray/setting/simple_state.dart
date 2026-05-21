@@ -10,6 +10,7 @@ class XraySettingSimple {
   var routing = SimpleRouting();
   var dns = SimpleDns.cloudflareProxy;
   var enableLog = false;
+  var fakeDns = false;
 
   Future<void> readFromPreferences() async {
     final jsonMap = await PreferencesKey().readXraySettingSimple();
@@ -24,6 +25,9 @@ class XraySettingSimple {
     if (model.enableLog != null) {
       enableLog = model.enableLog!;
     }
+    if (model.fakeDns != null) {
+      fakeDns = model.fakeDns!;
+    }
   }
 
   Future<void> saveToPreferences() async {
@@ -31,7 +35,7 @@ class XraySettingSimple {
   }
 
   XraySettingSimpleModel get _model =>
-      XraySettingSimpleModel(routing.model, dns.id, enableLog);
+      XraySettingSimpleModel(routing.model, dns.id, enableLog, fakeDns);
 }
 
 class SimpleRouting {
@@ -108,7 +112,6 @@ enum _SimpleDnsAddress {
 
 enum SimpleDns {
   cloudflareProxy(0),
-  cloudflareDirect(1),
   cloudflareDoH(2);
 
   const SimpleDns(this.id);
@@ -133,7 +136,6 @@ enum SimpleDns {
   String get address {
     switch (this) {
       case SimpleDns.cloudflareProxy:
-      case SimpleDns.cloudflareDirect:
         return _SimpleDnsAddress.cloudflare.name;
       case SimpleDns.cloudflareDoH:
         return _SimpleDnsAddress.cloudflareDoH.name;
@@ -141,19 +143,12 @@ enum SimpleDns {
   }
 
   RoutingOutboundTag get outbound {
-    switch (this) {
-      case SimpleDns.cloudflareDirect:
-        return RoutingOutboundTag.direct;
-      case SimpleDns.cloudflareProxy:
-      case SimpleDns.cloudflareDoH:
-        return RoutingOutboundTag.proxy;
-    }
+    return RoutingOutboundTag.proxy;
   }
 
   String get nonIPQueryDns {
     switch (this) {
       case SimpleDns.cloudflareProxy:
-      case SimpleDns.cloudflareDirect:
         return _SimpleDnsAddress.cloudflare.name;
       case SimpleDns.cloudflareDoH:
         return _SimpleDnsAddress.cloudflareDoH.name;

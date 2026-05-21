@@ -23,6 +23,9 @@ XrayJson _$XrayJsonFromJson(Map<String, dynamic> json) => XrayJson(
   (json['outbounds'] as List<dynamic>?)
       ?.map((e) => XrayOutbound.fromJson(e as Map<String, dynamic>))
       .toList(),
+  (json['fakeDns'] as List<dynamic>?)
+      ?.map((e) => XrayFakeDns.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$XrayJsonToJson(XrayJson instance) => <String, dynamic>{
@@ -32,6 +35,7 @@ Map<String, dynamic> _$XrayJsonToJson(XrayJson instance) => <String, dynamic>{
   'routing': ?instance.routing?.toJson(),
   'inbounds': ?instance.inbounds?.map((e) => e.toJson()).toList(),
   'outbounds': ?instance.outbounds?.map((e) => e.toJson()).toList(),
+  'fakeDns': ?instance.fakeDns?.map((e) => e.toJson()).toList(),
 };
 
 XrayLog _$XrayLogFromJson(Map<String, dynamic> json) => XrayLog(
@@ -771,3 +775,12 @@ Map<String, dynamic> _$XrayMuxToJson(XrayMux instance) => <String, dynamic>{
   'xudpConcurrency': ?instance.xudpConcurrency,
   'xudpProxyUDP443': ?instance.xudpProxyUDP443,
 };
+
+XrayFakeDns _$XrayFakeDnsFromJson(Map<String, dynamic> json) =>
+    XrayFakeDns(json['ipPool'] as String?, (json['poolSize'] as num?)?.toInt());
+
+Map<String, dynamic> _$XrayFakeDnsToJson(XrayFakeDns instance) =>
+    <String, dynamic>{
+      'ipPool': ?instance.ipPool,
+      'poolSize': ?instance.poolSize,
+    };

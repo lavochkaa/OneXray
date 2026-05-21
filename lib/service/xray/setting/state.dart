@@ -1,5 +1,6 @@
 import 'package:onexray/service/xray/constants.dart';
 import 'package:onexray/service/xray/setting/dns_state.dart';
+import 'package:onexray/service/xray/setting/fake_dns_state.dart';
 import 'package:onexray/service/xray/setting/inbounds_state.dart';
 import 'package:onexray/service/xray/setting/log_state.dart';
 import 'package:onexray/service/xray/setting/outbounds_state.dart';
@@ -11,6 +12,7 @@ abstract final class RoutingRuleTag {
   static const dnsDoT = "dnsDoT";
   static const ping = "ping";
   static const localDnsDirect = "localDnsDirect";
+  static const defaultDnsProxy = "defaultDnsProxy";
   static const domainDirect = "domainDirect";
   static const ipDirect = "IPDirect";
 }
@@ -26,6 +28,7 @@ class XraySettingState {
 
   var log = LogState();
   var dns = DnsState();
+  var fakeDns = FakeDnsPoolsState();
   var routing = RoutingState();
   var inbounds = InboundsState();
   var outbounds = OutboundsState();

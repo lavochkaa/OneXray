@@ -15,6 +15,7 @@ extension XraySettingStateWriter on XraySettingState {
 
     xrayJson.log = log.xrayJson;
     xrayJson.dns = dns.xrayJson;
+    xrayJson.fakeDns = fakeDns.xrayJson(dns.queryStrategy);
     xrayJson.routing = routing.xrayJson;
     xrayJson.inbounds = inbounds.xrayJson;
     xrayJson.outbounds = outbounds.xrayJson;
