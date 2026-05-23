@@ -11,6 +11,7 @@ class XraySettingSimple {
   var dns = SimpleDns.cloudflareProxy;
   var enableLog = false;
   var fakeDns = false;
+  int? chainProxyOutboundId;
 
   Future<void> readFromPreferences() async {
     final jsonMap = await PreferencesKey().readXraySettingSimple();
@@ -28,14 +29,22 @@ class XraySettingSimple {
     if (model.fakeDns != null) {
       fakeDns = model.fakeDns!;
     }
+    if (model.chainProxyOutboundId != null) {
+      chainProxyOutboundId = model.chainProxyOutboundId;
+    }
   }
 
   Future<void> saveToPreferences() async {
     await PreferencesKey().saveXraySettingSimple(_model.toJson());
   }
 
-  XraySettingSimpleModel get _model =>
-      XraySettingSimpleModel(routing.model, dns.id, enableLog, fakeDns);
+  XraySettingSimpleModel get _model => XraySettingSimpleModel(
+    routing.model,
+    dns.id,
+    enableLog,
+    fakeDns,
+    chainProxyOutboundId,
+  );
 }
 
 class SimpleRouting {

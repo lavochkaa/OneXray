@@ -34,8 +34,17 @@ import 'package:onexray/service/xray/outbound/state.dart';
 import 'package:onexray/service/xray/outbound/state_reader.dart';
 import 'package:onexray/service/xray/raw/fix.dart';
 import 'package:onexray/service/xray/setting/inbounds_state.dart';
+import 'package:onexray/service/xray/setting/enum.dart';
+import 'package:onexray/service/xray/setting/simple_state.dart';
+import 'package:onexray/service/xray/setting/state.dart';
 import 'package:onexray/service/xray/setting/state_reader.dart';
 import 'package:onexray/service/xray/setting/state_writer.dart';
+
+class _VpnStartException implements Exception {
+  final String message;
+
+  _VpnStartException(this.message);
+}
 
 final class VpnService {
   static final VpnService _singleton = VpnService._internal();
@@ -194,7 +203,13 @@ final class VpnService {
       final db = AppDatabase();
       final outbound = await db.coreConfigDao.searchRow(rowId);
       if (outbound != null) {
-        await _realStartXray(outbound);
+        try {
+          await _realStartXray(outbound);
+        } on _VpnStartException catch (e) {
+          await _updateRunningId(DBConstants.defaultId);
+          eventBus.updateVpnLoading(false);
+          ToastService().showToast(e.message);
+        }
       } else {
         await _updateRunningId(DBConstants.defaultId);
         eventBus.updateVpnLoading(false);
@@ -285,13 +300,90 @@ final class VpnService {
     final settingState = await XraySettingStateReader.loadFromDb();
 
     final outboundState = OutboundState();
-    outboundState.readFromDbData(config);
+    var outboundValid = false;
+    try {
+      outboundValid = outboundState.readFromDbData(config);
+    } catch (_) {
+      outboundValid = false;
+    }
+    if (!outboundValid) {
+      throw _VpnStartException(appLocalizationsNoContext().vpnOutboundInvalid);
+    }
+    await _applyChainProxy(settingState, outboundState, config);
     settingState.outbounds.outbounds.add(outboundState);
 
     await settingState.fixSetting(tunSettingState, port);
     final xrayJson = settingState.xrayJson;
     final configPath = await xrayJson.writeConfig(runDir);
     return configPath;
+  }
+
+  Future<void> _applyChainProxy(
+    XraySettingState settingState,
+    OutboundState outboundState,
+    CoreConfigData config,
+  ) async {
+    outboundState.tag = RoutingOutboundTag.proxy.name;
+
+    final simpleChainProxyId = await _simpleChainProxyOutboundId();
+    if (simpleChainProxyId != null) {
+      if (simpleChainProxyId == config.id) {
+        throw _VpnStartException(
+          appLocalizationsNoContext().vpnChainProxySameAsOutbound,
+        );
+      }
+      settingState.outbounds.chainProxy = await _loadChainProxy(
+        simpleChainProxyId,
+      );
+    }
+
+    final chainProxy = settingState.outbounds.chainProxy;
+    if (chainProxy != null) {
+      chainProxy.tag = RoutingOutboundTag.chainProxy.name;
+      chainProxy.dialerProxy = "";
+      outboundState.dialerProxy = RoutingOutboundTag.chainProxy.name;
+    }
+  }
+
+  Future<int?> _simpleChainProxyOutboundId() async {
+    final settingId = await PreferencesKey().readXraySettingId();
+    if (settingId != XraySettingSimple.simpleId) {
+      return null;
+    }
+    final simple = XraySettingSimple();
+    await simple.readFromPreferences();
+    return simple.chainProxyOutboundId;
+  }
+
+  Future<OutboundState> _loadChainProxy(int id) async {
+    final db = AppDatabase();
+    final row = await db.coreConfigDao.searchRow(id);
+    if (row == null) {
+      throw _VpnStartException(
+        appLocalizationsNoContext().vpnChainProxyMissing,
+      );
+    }
+    if (CoreConfigType.fromString(row.type) != CoreConfigType.outbound) {
+      throw _VpnStartException(
+        appLocalizationsNoContext().vpnChainProxyInvalid,
+      );
+    }
+    final chainProxy = OutboundState();
+    var valid = false;
+    try {
+      valid = chainProxy.readFromDbData(row);
+    } catch (_) {
+      valid = false;
+    }
+    if (!valid) {
+      throw _VpnStartException(
+        appLocalizationsNoContext().vpnChainProxyInvalid,
+      );
+    }
+    chainProxy.name = row.name;
+    chainProxy.tag = RoutingOutboundTag.chainProxy.name;
+    chainProxy.dialerProxy = "";
+    return chainProxy;
   }
 
   Future<String> _writeXrayRawConfig(

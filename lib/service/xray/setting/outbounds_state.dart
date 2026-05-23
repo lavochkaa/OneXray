@@ -3,6 +3,8 @@ import 'package:onexray/core/tools/empty.dart';
 import 'package:onexray/core/tools/extensions.dart';
 import 'package:onexray/service/xray/outbound/enum.dart';
 import 'package:onexray/service/xray/outbound/state.dart';
+import 'package:onexray/service/xray/outbound/state_reader.dart';
+import 'package:onexray/service/xray/outbound/state_validator.dart';
 import 'package:onexray/service/xray/outbound/state_writer.dart';
 import 'package:onexray/service/xray/setting/enum.dart';
 import 'package:onexray/service/xray/standard.dart';
@@ -134,6 +136,7 @@ class OutboundDnsState {
 
 class OutboundsState {
   final outbounds = <OutboundState>[];
+  OutboundState? chainProxy;
 
   var freedom = OutboundFreedomState();
   var fragment = OutboundFragmentState();
@@ -141,6 +144,7 @@ class OutboundsState {
   var dns = OutboundDnsState();
 
   void removeWhitespace() {
+    chainProxy?.removeWhitespace();
     freedom.removeWhitespace();
     dns.removeWhitespace();
   }
@@ -166,6 +170,21 @@ class OutboundsState {
         if (outbound.protocol == XrayOutboundProtocol.dns.name &&
             outbound.tag == RoutingOutboundTag.dnsOut.name) {
           _readDnsOutbound(outbound);
+          continue;
+        }
+        if (outbound.tag == RoutingOutboundTag.chainProxy.name) {
+          final chainProxy = OutboundState();
+          var valid = false;
+          try {
+            valid = chainProxy.readFromOutbound(outbound);
+          } catch (_) {
+            valid = false;
+          }
+          if (valid) {
+            chainProxy.tag = RoutingOutboundTag.chainProxy.name;
+            chainProxy.dialerProxy = "";
+            this.chainProxy = chainProxy;
+          }
           continue;
         }
       }
@@ -248,8 +267,22 @@ class OutboundsState {
 
   List<XrayOutbound> get xrayJson {
     final outbounds = <XrayOutbound>[];
-    if (this.outbounds.isNotEmpty) {
-      for (final outbound in this.outbounds) {
+    final otherOutbounds = <OutboundState>[];
+    for (final outbound in this.outbounds) {
+      if (outbound.tag == RoutingOutboundTag.proxy.name) {
+        outbounds.add(outbound.xrayJson);
+      } else {
+        otherOutbounds.add(outbound);
+      }
+    }
+    if (chainProxy != null) {
+      final chainProxy = this.chainProxy!;
+      chainProxy.tag = RoutingOutboundTag.chainProxy.name;
+      chainProxy.dialerProxy = "";
+      outbounds.add(chainProxy.xrayJson);
+    }
+    if (otherOutbounds.isNotEmpty) {
+      for (final outbound in otherOutbounds) {
         outbounds.add(outbound.xrayJson);
       }
     }
@@ -269,6 +302,7 @@ class OutboundsState {
   List<String> get outboundTags {
     final tags = <String>[
       RoutingOutboundTag.proxy.name,
+      if (chainProxy != null) RoutingOutboundTag.chainProxy.name,
       freedom.tag.name,
       fragment.tag.name,
       blackHole.tag.name,

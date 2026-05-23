@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:onexray/core/db/database/database.dart';
+import 'package:onexray/pages/home/outbound_select/params.dart';
+import 'package:onexray/pages/main/url.dart';
 import 'package:onexray/service/event_bus/service.dart';
 import 'package:onexray/service/xray/setting/enum.dart';
 import 'package:onexray/service/xray/setting/simple_state.dart';
 
 class XraySettingSimpleCubitState {
   final XraySettingSimple xraySetting;
+  final String chainProxyName;
   final int version;
 
   const XraySettingSimpleCubitState({
     required this.xraySetting,
+    this.chainProxyName = "",
     this.version = 0,
   });
 
@@ -19,8 +24,21 @@ class XraySettingSimpleCubitState {
 
   XraySettingSimpleCubitState bumped() => XraySettingSimpleCubitState(
     xraySetting: xraySetting,
+    chainProxyName: chainProxyName,
     version: version + 1,
   );
+
+  XraySettingSimpleCubitState copyWith({
+    XraySettingSimple? xraySetting,
+    String? chainProxyName,
+    int? version,
+  }) {
+    return XraySettingSimpleCubitState(
+      xraySetting: xraySetting ?? this.xraySetting,
+      chainProxyName: chainProxyName ?? this.chainProxyName,
+      version: version ?? this.version,
+    );
+  }
 }
 
 class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
@@ -31,7 +49,24 @@ class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
   Future<void> _readXraySetting() async {
     final xraySetting = XraySettingSimple();
     await xraySetting.readFromPreferences();
-    emit(XraySettingSimpleCubitState(xraySetting: xraySetting, version: 1));
+    final chainProxyName = await _readChainProxyName(
+      xraySetting.chainProxyOutboundId,
+    );
+    emit(
+      XraySettingSimpleCubitState(
+        xraySetting: xraySetting,
+        chainProxyName: chainProxyName,
+        version: 1,
+      ),
+    );
+  }
+
+  Future<String> _readChainProxyName(int? id) async {
+    if (id == null) {
+      return "";
+    }
+    final row = await AppDatabase().coreConfigDao.searchRow(id);
+    return row?.name ?? "";
   }
 
   void updateEnableLog(bool value) {
@@ -94,6 +129,30 @@ class XraySettingSimpleController extends Cubit<XraySettingSimpleCubitState> {
       state.xraySetting.dns = dnsId;
       emit(state.bumped());
     }
+  }
+
+  Future<void> editChainProxy(BuildContext context) async {
+    final params = OutboundSelectParams(
+      selectedId: state.xraySetting.chainProxyOutboundId,
+    );
+    final outbound = await context.push<CoreConfigData>(
+      RouterPath.outboundSelect,
+      extra: params,
+    );
+    if (outbound != null) {
+      state.xraySetting.chainProxyOutboundId = outbound.id;
+      emit(
+        state.copyWith(
+          chainProxyName: outbound.name,
+          version: state.version + 1,
+        ),
+      );
+    }
+  }
+
+  void clearChainProxy() {
+    state.xraySetting.chainProxyOutboundId = null;
+    emit(state.copyWith(chainProxyName: "", version: state.version + 1));
   }
 
   Future<void> save(BuildContext context) async {

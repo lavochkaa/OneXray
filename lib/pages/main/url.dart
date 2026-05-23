@@ -9,6 +9,8 @@ import 'package:onexray/pages/geo_data/show/page.dart';
 import 'package:onexray/pages/geo_data/show/params.dart';
 import 'package:onexray/pages/home/home/page.dart';
 import 'package:onexray/pages/home/node_info/page.dart';
+import 'package:onexray/pages/home/outbound_select/page.dart';
+import 'package:onexray/pages/home/outbound_select/params.dart';
 import 'package:onexray/pages/home/qrcode/page.dart';
 import 'package:onexray/pages/home/setting_list/page.dart';
 import 'package:onexray/pages/home/share/page.dart';
@@ -121,6 +123,7 @@ abstract final class RouterPath {
   static const inboundHttp = "/inboundHttp";
   static const inboundPing = "/inboundPing";
   static const outbounds = "/outbounds";
+  static const outboundSelect = "/outboundSelect";
   static const outboundFreedom = "/outboundFreedom";
   static const outboundFragment = "/outboundFragment";
   static const outboundBlackHole = "/outboundBlackHole";
@@ -262,6 +265,11 @@ abstract final class RouterPath {
         path: RouterPath.outbounds,
         builder: (_, state) =>
             OutboundsPage(params: state.extra as OutboundsParams),
+      ),
+      GoRoute(
+        path: RouterPath.outboundSelect,
+        builder: (_, state) =>
+            OutboundSelectPage(params: state.extra as OutboundSelectParams),
       ),
       GoRoute(
         path: RouterPath.outboundFreedom,

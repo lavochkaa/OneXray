@@ -50,6 +50,7 @@ class XraySettingSimplePage extends StatelessWidget {
                 children: [
                   _logSection(context, controller, state),
                   _fakeDnsSection(context, controller, state),
+                  _chainProxySection(context, controller, state),
                   _routingSection(context, controller, state),
                   _dnsSection(context, controller, state),
                 ],
@@ -120,6 +121,57 @@ class XraySettingSimplePage extends StatelessWidget {
             onChanged: (value) => controller.updateFakeDns(value),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _chainProxySection(
+    BuildContext context,
+    XraySettingSimpleController controller,
+    XraySettingSimpleCubitState state,
+  ) {
+    final chainProxyName = state.chainProxyName.isEmpty
+        ? AppLocalizations.of(context)!.chainProxyPageDisabled
+        : state.chainProxyName;
+    return SectionView(
+      title: AppLocalizations.of(context)!.xraySettingSimplePageChainProxy,
+      child: InkWell(
+        onTap: () => controller.editChainProxy(context),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  AppLocalizations.of(context)!.xraySettingSimplePageChainProxy,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  chainProxyName,
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SizedBox(
+                width: kMinInteractiveDimension,
+                height: kMinInteractiveDimension,
+                child: state.xraySetting.chainProxyOutboundId != null
+                    ? IconButton(
+                        onPressed: () => controller.clearChainProxy(),
+                        icon: const Icon(Icons.clear),
+                      )
+                    : const Center(child: Icon(Icons.chevron_right)),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

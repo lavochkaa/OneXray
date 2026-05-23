@@ -49,6 +49,7 @@ enum RoutingDomainStrategy {
 
 enum RoutingOutboundTag {
   proxy("proxy"),
+  chainProxy("chainProxy"),
   direct("direct"),
   fragment("fragment"),
   block("block"),

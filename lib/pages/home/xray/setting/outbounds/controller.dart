@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:onexray/core/db/database/database.dart';
+import 'package:onexray/l10n/localizations/app_localizations.dart';
+import 'package:onexray/pages/home/outbound_select/params.dart';
 import 'package:onexray/pages/home/xray/setting/outbound_dns/params.dart';
 import 'package:onexray/pages/home/xray/setting/outbound_freedom/params.dart';
 import 'package:onexray/pages/home/xray/setting/outbound_fragment/params.dart';
 import 'package:onexray/pages/home/xray/setting/outbounds/params.dart';
 import 'package:onexray/pages/main/url.dart';
+import 'package:onexray/pages/mixin/alert.dart';
+import 'package:onexray/service/xray/outbound/state.dart';
+import 'package:onexray/service/xray/outbound/state_reader.dart';
 import 'package:onexray/service/xray/setting/enum.dart';
 import 'package:onexray/service/xray/setting/outbounds_state.dart';
 
@@ -13,19 +19,13 @@ class OutboundsCubitState {
   final OutboundsState outboundsState;
   final int version;
 
-  const OutboundsCubitState({
-    required this.outboundsState,
-    this.version = 0,
-  });
+  const OutboundsCubitState({required this.outboundsState, this.version = 0});
 
-  factory OutboundsCubitState.initial() => OutboundsCubitState(
-        outboundsState: OutboundsState(),
-      );
+  factory OutboundsCubitState.initial() =>
+      OutboundsCubitState(outboundsState: OutboundsState());
 
-  OutboundsCubitState bumped() => OutboundsCubitState(
-        outboundsState: outboundsState,
-        version: version + 1,
-      );
+  OutboundsCubitState bumped() =>
+      OutboundsCubitState(outboundsState: outboundsState, version: version + 1);
 }
 
 class OutboundsController extends Cubit<OutboundsCubitState> {
@@ -45,7 +45,8 @@ class OutboundsController extends Cubit<OutboundsCubitState> {
       extra: params,
     );
     if (freedom != null) {
-      state.outboundsState.freedom = freedom; emit(state.bumped());
+      state.outboundsState.freedom = freedom;
+      emit(state.bumped());
     }
   }
 
@@ -56,7 +57,8 @@ class OutboundsController extends Cubit<OutboundsCubitState> {
       extra: params,
     );
     if (fragment != null) {
-      state.outboundsState.fragment = fragment; emit(state.bumped());
+      state.outboundsState.fragment = fragment;
+      emit(state.bumped());
     }
   }
 
@@ -80,8 +82,46 @@ class OutboundsController extends Cubit<OutboundsCubitState> {
       extra: params,
     );
     if (dns != null) {
-      state.outboundsState.dns = dns; emit(state.bumped());
+      state.outboundsState.dns = dns;
+      emit(state.bumped());
     }
+  }
+
+  Future<void> importChainProxy(BuildContext context) async {
+    final outbound = await context.push<CoreConfigData>(
+      RouterPath.outboundSelect,
+      extra: OutboundSelectParams(),
+    );
+    if (outbound == null) {
+      return;
+    }
+    final chainProxy = OutboundState();
+    var valid = false;
+    try {
+      valid = chainProxy.readFromDbData(outbound);
+    } catch (_) {
+      valid = false;
+    }
+    if (!valid) {
+      if (context.mounted) {
+        ContextAlert.showToast(
+          context,
+          AppLocalizations.of(context)!.chainProxyValidationInvalid,
+        );
+      }
+      return;
+    }
+    chainProxy.name = outbound.name;
+    chainProxy.tag = RoutingOutboundTag.chainProxy.name;
+    chainProxy.dialerProxy = "";
+    state.outboundsState.chainProxy = chainProxy;
+    emit(state.bumped());
+  }
+
+  void deleteChainProxy() {
+    state.outboundsState.chainProxy = null;
+    state.outboundsState.fixDnsDialerProxy();
+    emit(state.bumped());
   }
 
   void save(BuildContext context) {

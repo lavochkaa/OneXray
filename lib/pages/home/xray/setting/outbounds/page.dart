@@ -21,27 +21,65 @@ class OutboundsPage extends StatelessWidget {
         builder: (context, state) {
           final controller = context.read<OutboundsController>();
           return Scaffold(
-        appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.outboundsPageTitle),
-        ),
-        body: SafeArea(child: _body(context, controller)),
-      );
+            appBar: AppBar(
+              title: Text(AppLocalizations.of(context)!.outboundsPageTitle),
+            ),
+            body: SafeArea(child: _body(context, controller, state)),
+          );
         },
       ),
     );
   }
 
-  Widget _body(BuildContext context, OutboundsController controller) {
+  Widget _body(
+    BuildContext context,
+    OutboundsController controller,
+    OutboundsCubitState state,
+  ) {
     return DefaultTextStyle.merge(
       style: const TextStyle(fontSize: GlobalConstants.bodyFontSize),
       child: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
-              child: _editSection(context, controller),
+              child: Column(
+                children: [
+                  _chainProxySection(context, controller, state),
+                  _editSection(context, controller),
+                ],
+              ),
             ),
           ),
           _bottomButton(context, controller),
+        ],
+      ),
+    );
+  }
+
+  Widget _chainProxySection(
+    BuildContext context,
+    OutboundsController controller,
+    OutboundsCubitState state,
+  ) {
+    final chainProxy = state.outboundsState.chainProxy;
+    final title =
+        chainProxy?.name ??
+        AppLocalizations.of(context)!.chainProxyPageDisabled;
+    return SectionView(
+      title: AppLocalizations.of(context)!.chainProxyPageTitle,
+      child: Column(
+        children: [
+          ListTile(
+            onTap: () => controller.importChainProxy(context),
+            title: Text(title),
+            trailing: const Icon(Icons.chevron_right),
+          ),
+          if (chainProxy != null)
+            ListTile(
+              onTap: () => controller.deleteChainProxy(),
+              title: Text(AppLocalizations.of(context)!.chainProxyPageDelete),
+              trailing: const Icon(Icons.delete),
+            ),
         ],
       ),
     );

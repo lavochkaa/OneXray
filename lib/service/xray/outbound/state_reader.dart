@@ -9,12 +9,13 @@ import 'package:onexray/service/xray/outbound/state.dart';
 import 'package:onexray/service/xray/outbound/xhttp/state_reader.dart';
 
 extension OutboundStateReader on OutboundState {
-  void readFromDbData(CoreConfigData outbound) {
+  bool readFromDbData(CoreConfigData outbound) {
     if (EmptyTool.checkString(outbound.data)) {
       final bytes = base64Decode(outbound.data!);
       final text = utf8.decode(bytes);
-      readFromText(text);
+      return readFromText(text);
     }
+    return false;
   }
 
   bool readFromText(String text) {

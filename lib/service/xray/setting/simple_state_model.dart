@@ -8,12 +8,14 @@ class XraySettingSimpleModel {
   int? dnsId;
   bool? enableLog;
   bool? fakeDns;
+  int? chainProxyOutboundId;
 
   XraySettingSimpleModel(
     this.routing,
     this.dnsId,
     this.enableLog,
     this.fakeDns,
+    this.chainProxyOutboundId,
   );
 
   factory XraySettingSimpleModel.fromJson(Map<String, dynamic> json) =>
