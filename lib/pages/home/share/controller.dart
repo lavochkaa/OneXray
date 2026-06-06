@@ -42,12 +42,12 @@ class ShareState {
   });
 
   factory ShareState.initial() => const ShareState(
-        showLinkSection: false,
-        linkSection: "",
-        linkUrl: "",
-        linkQrcodeSuccess: false,
-        appUrl: "",
-      );
+    showLinkSection: false,
+    linkSection: "",
+    linkUrl: "",
+    linkQrcodeSuccess: false,
+    appUrl: "",
+  );
 
   ShareState copyWith({
     bool? showLinkSection,
@@ -96,10 +96,12 @@ class ShareController extends Cubit<ShareState> {
       if (config != null) {
         final type = CoreConfigType.fromString(config.type);
         if (type == CoreConfigType.outbound) {
-          emit(state.copyWith(
-            showLinkSection: true,
-            linkSection: appLocalizationsNoContext().sharePageXrayLink,
-          ));
+          emit(
+            state.copyWith(
+              showLinkSection: true,
+              linkSection: appLocalizationsNoContext().sharePageXrayLink,
+            ),
+          );
           await _parseXrayJson(config);
         }
         final result = await AppShareService().generateConfigLink(config);
@@ -113,10 +115,12 @@ class ShareController extends Cubit<ShareState> {
     if (subscriptionId != DBConstants.defaultId) {
       final subscription = await db.subscriptionDao.searchRow(subscriptionId);
       if (subscription != null) {
-        emit(state.copyWith(
-          showLinkSection: true,
-          linkSection: appLocalizationsNoContext().sharePageSubscriptionLink,
-        ));
+        emit(
+          state.copyWith(
+            showLinkSection: true,
+            linkSection: appLocalizationsNoContext().sharePageSubscriptionLink,
+          ),
+        );
         await _parseShareSubscription(subscription);
         final result = AppShareService().generateSubscriptionLink(subscription);
         await _finishApp(result);

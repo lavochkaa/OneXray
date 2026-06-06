@@ -80,15 +80,11 @@ class FileTool {
     String name,
     String extension,
   ) async {
-    Uint8List? bytes = data;
-    if (AppPlatform.isDesktop) {
-      bytes = null;
-    }
     String? outputFile = await FilePicker.saveFile(
       fileName: name,
       type: FileType.custom,
       allowedExtensions: [extension],
-      bytes: bytes,
+      bytes: data,
     );
 
     if (outputFile == null) {
