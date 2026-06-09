@@ -48,6 +48,11 @@
           run: pod install
           working-directory: ios
 
+        - name: Patch device_info_plus
+          run: |
+            find ~/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" \
+              -exec sed -i '' 's/processInfo\.isiOSAppOnVision/NO/g' {} \;
+
         - name: Build iOS (no codesign)
           run: flutter build ios --release --no-codesign
 
