@@ -32,6 +32,15 @@ jobs:
         run: python3 build/main.py apple gomobile
         working-directory: libXray
 
+      - name: Debug xcframework build output
+        run: |
+          echo "=== libXray root ==="
+          ls -la libXray/
+          echo "=== xcframeworks found ==="
+          find libXray -name "*.xcframework" -type d | head -20
+          echo "=== xcframework slices ==="
+          find libXray -name "*.xcframework" -type d -exec ls -la {} \; | head -40
+
       - name: Replace xcframework
         run: |
           rm -rf swift/All/LibXray.xcframework
