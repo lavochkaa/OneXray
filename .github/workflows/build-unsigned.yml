@@ -50,8 +50,14 @@
 
         - name: Patch device_info_plus
           run: |
-            find ~/.pub-cache -name "FPPDeviceInfoPlusPlugin.m" \
-              -exec sed -i '' 's/processInfo\.isiOSAppOnVision/NO/g' {} \;
+            python3 -c "
+    import glob, os
+    for f in glob.glob(os.path.expanduser('~/.pub-cache/**FPPDeviceInfoPlusPlugin.m'), recursive=True):
+        c = open(f).read()
+        c = c.replace('processInfo.isiOSAppOnVision', 'NO')
+        open(f,'w').write(c)
+        print('Patched:', f)
+    "
 
         - name: Build iOS (no codesign)
           run: flutter build ios --release --no-codesign
