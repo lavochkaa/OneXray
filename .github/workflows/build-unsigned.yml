@@ -17,7 +17,7 @@
         - uses: actions/setup-go@v5
           with:
             go-version: '1.22'
-
+  
         - name: Install gomobile
           run: |
             go install golang.org/x/mobile/cmd/gomobile@latest
@@ -27,7 +27,7 @@
         - name: Tidy modules
           run: go mod tidy
           working-directory: libXray
-
+  
         - name: Build xcframework
           run: python3 build/main.py apple gomobile
           working-directory: libXray
@@ -43,7 +43,7 @@
 
         - name: Install deps
           run: flutter pub get
-
+  
         - name: Install CocoaPods
           run: pod install
           working-directory: ios
@@ -56,11 +56,10 @@
             mkdir -p Payload
             cp -r build/ios/iphoneos/Runner.app Payload/
             zip -r OneXray-patched.ipa Payload/
-  
+
         - name: Upload IPA
           uses: actions/upload-artifact@v4
           with:
             name: OneXray-patched-ipa
             path: OneXray-patched.ipa
             retention-days: 7
-  
