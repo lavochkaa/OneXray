@@ -218,14 +218,4 @@ class PreferencesKey {
     await _prefs.setString(_languageCode, value);
   }
 
-  static const _defaultConfigSeeded = "defaultConfigSeeded_v3";
-
-  Future<bool> readDefaultConfigSeeded() async {
-    final value = await _prefs.getBool(_defaultConfigSeeded);
-    return value ?? false;
-  }
-
-  Future<void> saveDefaultConfigSeeded() async {
-    await _prefs.setBool(_defaultConfigSeeded, true);
-  }
 }
