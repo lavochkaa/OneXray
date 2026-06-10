@@ -14,10 +14,11 @@ jobs:
           repository: lavochkaa/libXray
           path: libXray
 
-      - name: Clone patched Xray-core
-        run: |
-          git clone --depth 1 --branch xhttp-session-id-format \
-            https://github.com/XXcipherX/Xray-core.git /tmp/Xray-core
+      - uses: actions/checkout@v4
+        with:
+          repository: XXcipherX/Xray-core
+          ref: xhttp-session-id-format
+          path: Xray-core
 
       - uses: actions/setup-go@v5
         with:
