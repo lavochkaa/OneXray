@@ -72,16 +72,6 @@ class XraySettingListController extends Cubit<XraySettingListState> {
   }
 
   void _initSimpleConfigs() {
-    final sub = SubscriptionData(
-      id: XraySettingSimple.simpleId,
-      name: appLocalizationsNoContext().xraySettingListPageSimple,
-      url: "",
-      timestamp: DateTime.now(),
-      count: 1,
-      expanded: true,
-    );
-    final simpleSub = SubscriptionItem(sub, ConfigQueryRowType.subscription);
-
     final config = CoreConfigData(
       id: XraySettingSimple.simpleId,
       name: appLocalizationsNoContext().xraySettingListPageSimple,
@@ -92,7 +82,7 @@ class XraySettingListController extends Cubit<XraySettingListState> {
     );
     final simpleConfig = ConfigItem(config, ConfigQueryRowType.config);
 
-    emit(state.copyWith(simpleConfigs: [simpleSub, simpleConfig]));
+    emit(state.copyWith(simpleConfigs: [simpleConfig]));
   }
 
   void updateXraySettingId(BuildContext context, int? id) {

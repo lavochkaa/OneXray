@@ -61,10 +61,11 @@ class XraySettingListPage extends StatelessWidget {
     XraySettingListController controller,
     XraySettingListState state,
   ) {
+    final allItems = [...state.simpleConfigs, ...state.configs];
+    if (allItems.isEmpty) return const SizedBox.shrink();
     return ListView.separated(
-      itemBuilder: (ctx, index) =>
-          _itemRow(ctx, controller, state, index),
-      itemCount: state.configs.length + state.simpleConfigs.length,
+      itemBuilder: (ctx, index) => _itemRow(ctx, controller, state, index),
+      itemCount: allItems.length,
       separatorBuilder: (_, _) => const Divider(),
     );
   }
@@ -75,32 +76,11 @@ class XraySettingListPage extends StatelessWidget {
     XraySettingListState state,
     int index,
   ) {
-    if (index >= 0 && index < 2) {
-      return _simpleCell(context, controller, state, index);
+    final simpleCount = state.simpleConfigs.length;
+    if (index < simpleCount) {
+      return _simpleConfigRow(context, controller, state, state.simpleConfigs[index]);
     } else {
-      return _cell(context, controller, state, index - 2);
-    }
-  }
-
-  Widget _simpleCell(
-    BuildContext context,
-    XraySettingListController controller,
-    XraySettingListState state,
-    int index,
-  ) {
-    final row = state.simpleConfigs[index];
-    switch (row.rowType) {
-      case ConfigQueryRowType.subscription:
-        final item = row as SubscriptionItem;
-        return SubscriptionRowView(
-          item: item,
-          pingCallback: null,
-          expandCallback: null,
-        );
-      case ConfigQueryRowType.config:
-        return _simpleConfigRow(context, controller, state, row);
-      case ConfigQueryRowType.ads:
-        return GoogleAdsRow();
+      return _cell(context, controller, state, index - simpleCount);
     }
   }
 

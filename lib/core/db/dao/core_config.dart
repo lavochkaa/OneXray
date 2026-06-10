@@ -101,7 +101,7 @@ class CoreConfigDao extends DatabaseAccessor<AppDatabase>
   JoinedSelectStatement<$CoreConfigTable, CoreConfigData>
   get _allConfigRowsQuery {
     final query = selectOnly(coreConfig)
-      ..orderBy([OrderingTerm.asc(coreConfig.delay)])
+      ..orderBy([OrderingTerm.asc(coreConfig.id)])
       ..addColumns([
         coreConfig.id,
         coreConfig.name,
@@ -134,7 +134,7 @@ class CoreConfigDao extends DatabaseAccessor<AppDatabase>
   Future<List<CoreConfigData>> get allOutboundRowsWithData async =>
       (select(coreConfig)
             ..where((tbl) => tbl.type.equals(CoreConfigType.outbound.name))
-            ..orderBy([(tbl) => OrderingTerm.asc(tbl.delay)]))
+            ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
           .get();
 
   Stream<List<ConfigQueryRow>> allSettingRowsStream() async* {

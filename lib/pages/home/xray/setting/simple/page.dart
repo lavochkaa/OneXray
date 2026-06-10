@@ -48,11 +48,10 @@ class XraySettingSimplePage extends StatelessWidget {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _logSection(context, controller, state),
-                  _fakeDnsSection(context, controller, state),
                   _chainProxySection(context, controller, state),
                   _routingSection(context, controller, state),
                   _dnsSection(context, controller, state),
+                  _logSection(context, controller, state),
                 ],
               ),
             ),
@@ -93,13 +92,8 @@ class XraySettingSimplePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _domainStrategy(context, controller, state),
-          _queryStrategy(context, controller, state),
-          _directSet(context, controller, state),
           _appleDirect(context, controller, state),
           _localDirect(context, controller, state),
-          _enableIPRule(context, controller, state),
-          _localDns(context, controller, state),
         ],
       ),
     );
