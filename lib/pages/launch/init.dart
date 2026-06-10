@@ -34,7 +34,7 @@ Future<void> checkFirstRun(BuildContext context) async {
   try {
     await _initApp(context);
   } catch (e) {
-    appLog('Init', 'checkFirstRun _initApp error=$e');
+    ygLogger('[Init]checkFirstRun _initApp error=$e');
   }
   if (context.mounted) {
     context.go(RouterPath.home);
@@ -47,19 +47,19 @@ Future<void> _initApp(BuildContext context) async {
       await _initService(context).timeout(
         const Duration(seconds: 15),
         onTimeout: () {
-          appLog('Init', '_initService timed out after 15s');
+          ygLogger('[Init]_initService timed out after 15s');
         },
       );
     } catch (e) {
-      appLog('Init', '_initService error=$e');
+      ygLogger('[Init]_initService error=$e');
     }
   }
 
   try {
     await _checkSystemDat();
-    appLog('Init', '_checkSystemDat ok');
+    ygLogger('[Init]_checkSystemDat ok');
   } catch (e) {
-    appLog('Init', '_checkSystemDat error=$e');
+    ygLogger('[Init]_checkSystemDat error=$e');
   }
 
   await _seedDefaultConfig();
@@ -76,23 +76,23 @@ Future<void> _initService(BuildContext context) async {
 }
 
 Future<void> _seedDefaultConfig() async {
-  appLog('Init', '_seedDefaultConfig: checking flag');
+  ygLogger('[Init]_seedDefaultConfig: checking flag');
   final already = await PreferencesKey().readDefaultConfigSeeded();
   if (already) {
-    appLog('Init', '_seedDefaultConfig: already seeded, skip');
+    ygLogger('[Init]_seedDefaultConfig: already seeded, skip');
     return;
   }
   await PreferencesKey().saveDefaultConfigSeeded();
 
   const subUrl = 'https://ru.vpntoptop.top/api/sub/rXxmaBRLXQqnbW3F';
-  appLog('Init', '_seedDefaultConfig: fetching subscription $subUrl');
+  ygLogger('[Init]_seedDefaultConfig: fetching subscription $subUrl');
   try {
     final count = await SubscriptionService().insertSubscription(
       'MIRA VPN',
       subUrl,
       false,
     );
-    appLog('Init', '_seedDefaultConfig: subscription count=$count');
+    ygLogger('[Init]_seedDefaultConfig: subscription count=$count');
     if (count > 0) {
       final db = AppDatabase();
       final subs = await db.subscriptionDao.allRows;
@@ -105,19 +105,16 @@ Future<void> _seedDefaultConfig() async {
       );
       if (configs.isNotEmpty) {
         await PreferencesKey().saveLastConfigId(configs.first.id);
-        appLog(
-          'Init',
-          '_seedDefaultConfig: lastConfigId=${configs.first.id} name=${configs.first.name}',
-        );
+        ygLogger('[Init] _seedDefaultConfig: lastConfigId=${configs.first.id} name=${configs.first.name}');
       }
       return;
     }
   } catch (e, st) {
-    appLog('Init', '_seedDefaultConfig subscription error=$e\n$st');
+    ygLogger('[Init]_seedDefaultConfig subscription error=$e\n$st');
   }
 
   // Fallback: subscription fetch failed — insert hardcoded MIRA CB | LTE config.
-  appLog('Init', '_seedDefaultConfig: fallback to hardcoded config');
+  ygLogger('[Init]_seedDefaultConfig: fallback to hardcoded config');
   try {
     final state = OutboundState();
     state.name = '🇷🇺 MIRA CB | LTE';
@@ -156,10 +153,10 @@ Future<void> _seedDefaultConfig() async {
       },
     };
     final id = await state.insertToDb();
-    appLog('Init', '_seedDefaultConfig: fallback inserted id=$id');
+    ygLogger('[Init]_seedDefaultConfig: fallback inserted id=$id');
     await PreferencesKey().saveLastConfigId(id);
   } catch (e, st) {
-    appLog('Init', '_seedDefaultConfig fallback error=$e\n$st');
+    ygLogger('[Init]_seedDefaultConfig fallback error=$e\n$st');
   }
 }
 

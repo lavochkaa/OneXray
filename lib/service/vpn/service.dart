@@ -187,7 +187,7 @@ final class VpnService {
   Future<bool> checkPermission() async {
     if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS) {
       final granted = await AppHostApi().checkVpnPermission();
-      appLog('VpnSvc', 'checkVpnPermission granted=$granted');
+      ygLogger('[VpnSvc] checkVpnPermission granted=$granted');
       return granted;
     }
     return true;
@@ -423,9 +423,9 @@ final class VpnService {
     );
     await request.writeToStartFile();
 
-    appLog('VpnSvc', '_makeVpnRequestAndStart: calling native startVpn');
+    ygLogger('[VpnSvc] _makeVpnRequestAndStart: calling native startVpn');
     await AppHostApi().startVpn();
-    appLog('VpnSvc', '_makeVpnRequestAndStart: native startVpn returned');
+    ygLogger('[VpnSvc] _makeVpnRequestAndStart: native startVpn returned');
     _armStartWatchdog();
   }
 
@@ -433,7 +433,7 @@ final class VpnService {
     Future.delayed(const Duration(seconds: 6), () {
       final eb = AppEventBus.instance;
       if (eb.state.vpnLoading && !_vpnRunning) {
-        appLog('VpnSvc', 'startWatchdog: no NE status event in 6s, clearing loading');
+        ygLogger('[VpnSvc] startWatchdog: no NE status event in 6s, clearing loading');
         _updateRunningId(DBConstants.defaultId);
         eb.updateVpnLoading(false);
       }
