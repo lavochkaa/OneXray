@@ -18,8 +18,6 @@ import UIKit
         let flutterApi = AppFlutterApi(binaryMessenger: binaryMessenger)
         BridgeHostApiSetup.setUp(binaryMessenger: binaryMessenger, api: AppHostApi(flutterApi: flutterApi))
         
-        GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-        
         // https://github.com/llfbandit/app_links/blob/master/doc/README_ios_7.md
         AppLinks.shared.defaultUrlHandling = .availability
     }
