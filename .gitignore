@@ -84,7 +84,7 @@ lib/firebase_options.dart
 # my ignore
 /assets/dat
 /android/app/libs
-*.xcframework
+!swift/All/LibXray.xcframework
 linux/app/
 windows/app/
 generated_bindings.dart
