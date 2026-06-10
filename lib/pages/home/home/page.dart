@@ -5,49 +5,41 @@ import 'package:onexray/core/tools/platform.dart';
 import 'package:onexray/l10n/localizations/app_localizations.dart';
 import 'package:onexray/pages/global/constants.dart';
 import 'package:onexray/pages/home/home/component/outbound/view.dart';
-import 'package:onexray/pages/home/home/component/raw/view.dart';
 import 'package:onexray/pages/home/home/controller.dart';
 import 'package:onexray/pages/theme/color.dart';
 import 'package:onexray/pages/widget/menu_picker.dart';
 import 'package:onexray/service/event_bus/service.dart';
 import 'package:onexray/service/event_bus/state.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController =
-      TabController(length: 2, vsync: this);
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HomeController(context, _tabController),
+      create: (_) => HomeController(context),
       child: BlocBuilder<HomeController, HomeState>(
         builder: (context, homeState) {
           final controller = context.read<HomeController>();
           return BlocBuilder<AppEventBus, AppEventBusState>(
             builder: (context, eventState) => Scaffold(
+              backgroundColor: ColorManager.scaffoldBackground(
+                Theme.of(context).brightness,
+              ),
               appBar: AppBar(
+                backgroundColor: ColorManager.surface(context),
+                elevation: 0,
                 leading: IconButton(
                   onPressed: () => controller.gotoSettings(context),
-                  icon: Icon(Icons.settings),
+                  icon: const Icon(Icons.settings_outlined),
                 ),
-                title: Text(AppLocalizations.of(context)!.homePageTitle),
+                title: Text(
+                  AppLocalizations.of(context)!.homePageTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 actions: [
                   _refreshButton(context, controller, homeState),
-                  _rightButton(context, controller, eventState),
+                  _addButton(context, controller, eventState),
                 ],
               ),
               body: SafeArea(
@@ -81,27 +73,33 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _rightButton(
+  Widget _addButton(
     BuildContext context,
     HomeController controller,
     AppEventBusState eventState,
   ) {
     if (eventState.downloading) {
-      return CircularProgressIndicator();
-    } else {
-      return IconMenuPicker(
-        icon: Icons.add,
-        menus: [
-          IconMenuId.manualInput,
-          IconMenuId.subscribeLink,
-          if (AppPlatform.isMobile) IconMenuId.scanQRCode,
-          IconMenuId.pickImage,
-          IconMenuId.pickFile,
-          IconMenuId.readPasteboard,
-        ],
-        callback: (actionId) => controller.addMenuAction(context, actionId),
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       );
     }
+    return IconMenuPicker(
+      icon: Icons.add,
+      menus: [
+        IconMenuId.manualInput,
+        IconMenuId.subscribeLink,
+        if (AppPlatform.isMobile) IconMenuId.scanQRCode,
+        IconMenuId.pickImage,
+        IconMenuId.pickFile,
+        IconMenuId.readPasteboard,
+      ],
+      callback: (actionId) => controller.addMenuAction(context, actionId),
+    );
   }
 
   Widget _body(
@@ -113,126 +111,128 @@ class _HomePageState extends State<HomePage>
     return DefaultTextStyle.merge(
       style: const TextStyle(fontSize: GlobalConstants.bodyFontSize),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _tabBar(context, controller),
-          Expanded(child: _tabBarView(context, controller)),
-          _bottomButton(context, controller, homeState, eventState),
+          const Expanded(child: HomeOutboundView()),
+          _connectPanel(context, controller, homeState, eventState),
         ],
       ),
     );
   }
 
-  Widget _tabBar(BuildContext context, HomeController controller) {
-    return ColoredBox(
-      color: ColorManager.surface(context),
-      child: TabBar(
-        controller: _tabController,
-        indicatorSize: TabBarIndicatorSize.tab,
-        tabs: [
-          Tab(text: AppLocalizations.of(context)!.homePageTabOutbound),
-          Tab(text: AppLocalizations.of(context)!.homePageTabRaw),
-        ],
-      ),
-    );
-  }
-
-  Widget _tabBarView(BuildContext context, HomeController controller) {
-    return TabBarView(
-      controller: _tabController,
-      children: const [HomeOutboundView(), HomeRawView()],
-    );
-  }
-
-  Widget _bottomButton(
+  Widget _connectPanel(
     BuildContext context,
     HomeController controller,
     HomeState homeState,
     AppEventBusState eventState,
   ) {
+    final isConnected = eventState.runningId != DBConstants.defaultId;
+    final isLoading = eventState.vpnLoading;
+
     return Container(
-      color: ColorManager.surface(context),
-      padding: EdgeInsetsDirectional.symmetric(vertical: 12, horizontal: 16),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: _nodeInfo(context, controller, eventState)),
-              _startVpnButton(context, controller, eventState),
-            ],
+      decoration: BoxDecoration(
+        color: ColorManager.surface(context),
+        border: Border(
+          top: BorderSide(
+            color: ColorManager.border(context),
+            width: 0.5,
           ),
+        ),
+      ),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isConnected) _locationRow(context, controller, eventState),
+          const SizedBox(height: 8),
+          _connectButton(context, controller, eventState, isConnected, isLoading),
         ],
       ),
     );
   }
 
-  Widget _startVpnButton(
+  Widget _locationRow(
     BuildContext context,
     HomeController controller,
     AppEventBusState eventState,
   ) {
-    if (eventState.vpnLoading) {
-      return const CircularProgressIndicator();
-    } else {
-      final stop = eventState.runningId == DBConstants.defaultId;
-      final color = stop
-          ? ColorManager.buttonStop(context)
-          : Theme.of(context).primaryColor;
-      final icon = stop ? Icons.public : Icons.private_connectivity;
-      final style = ElevatedButton.styleFrom(
-        padding: EdgeInsetsDirectional.zero,
-        backgroundColor: color,
-        iconSize: 30,
-        iconColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadiusDirectional.circular(12),
+    final location = eventState.location;
+    final text = controller.formatGeoLocation(context, location);
+    return InkWell(
+      onTap: () => controller.gotoNodeInfo(context),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.2), width: 1),
         ),
-      );
-      return SizedBox(
-        width: 56,
-        height: 56,
-        child: ElevatedButton(
-          style: style,
-          onPressed: () => controller.startVpn(context),
-          child: Icon(icon),
-        ),
-      );
-    }
-  }
-
-  Widget _nodeInfo(
-    BuildContext context,
-    HomeController controller,
-    AppEventBusState eventState,
-  ) {
-    if (eventState.runningId == DBConstants.defaultId) {
-      return SizedBox(height: 1);
-    } else {
-      final location = eventState.location;
-      final text = controller.formatGeoLocation(context, location);
-      return InkWell(
-        onTap: () => controller.gotoNodeInfo(context),
-        child: Padding(
-          padding: EdgeInsetsDirectional.symmetric(
-            horizontal: 10,
-            vertical: 10,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: ColorManager.primaryText(context),
-                  ),
+        child: Row(
+          children: [
+            Icon(Icons.location_on_outlined, size: 16, color: Colors.green.shade600),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.green.shade700,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              Icon(Icons.chevron_right),
-            ],
-          ),
+            ),
+            Icon(Icons.chevron_right, size: 16, color: Colors.green.shade600),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _connectButton(
+    BuildContext context,
+    HomeController controller,
+    AppEventBusState eventState,
+    bool isConnected,
+    bool isLoading,
+  ) {
+    if (isLoading) {
+      return const SizedBox(
+        height: 52,
+        child: Center(child: CircularProgressIndicator()),
       );
     }
+
+    final Color btnColor = isConnected
+        ? Theme.of(context).primaryColor
+        : ColorManager.buttonStop(context);
+    final String label = isConnected
+        ? AppLocalizations.of(context)!.menuBarStopVpn
+        : AppLocalizations.of(context)!.menuBarStartVpn;
+    final IconData icon = isConnected ? Icons.private_connectivity : Icons.public;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: btnColor,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+        ),
+        onPressed: () => controller.startVpn(context),
+        icon: Icon(icon, size: 22),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
+    );
   }
 }

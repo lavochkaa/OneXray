@@ -8,7 +8,6 @@ import 'package:onexray/core/db/database/constants.dart';
 import 'package:onexray/core/network/model.dart';
 import 'package:onexray/l10n/localizations/app_localizations.dart';
 import 'package:onexray/pages/home/xray/outbound/params.dart';
-import 'package:onexray/pages/home/xray/raw/params.dart';
 import 'package:onexray/pages/main/url.dart';
 import 'package:onexray/pages/mixin/alert.dart';
 import 'package:onexray/pages/widget/menu_picker.dart';
@@ -39,9 +38,8 @@ class HomeState {
 
 class HomeController extends Cubit<HomeState> {
   final BuildContext context;
-  final TabController tabController;
 
-  HomeController(this.context, this.tabController) : super(HomeState.initial()) {
+  HomeController(this.context) : super(HomeState.initial()) {
     _asyncInit();
   }
 
@@ -100,20 +98,12 @@ class HomeController extends Cubit<HomeState> {
   }
 
   void _addConfig(BuildContext context) {
-    switch (tabController.index) {
-      case 0:
-        final params = OutboundUIParams(
-          DBConstants.defaultId,
-          OutboundState(),
-          [],
-        );
-        context.push(RouterPath.outboundUI, extra: params);
-        break;
-      case 1:
-        final params = XrayRawParams(DBConstants.defaultId);
-        context.push(RouterPath.xrayRaw, extra: params);
-        break;
-    }
+    final params = OutboundUIParams(
+      DBConstants.defaultId,
+      OutboundState(),
+      [],
+    );
+    context.push(RouterPath.outboundUI, extra: params);
   }
 
   void _addSubscription(BuildContext context) {

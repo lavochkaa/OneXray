@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:collection/collection.dart';
@@ -12,9 +12,7 @@ import 'package:onexray/core/tools/empty.dart';
 import 'package:onexray/service/localizations/service.dart';
 import 'package:onexray/service/ping/state.dart';
 import 'package:onexray/service/xray/outbound/state.dart';
-import 'package:onexray/service/xray/outbound/state_ping.dart';
 import 'package:onexray/service/xray/outbound/state_reader.dart';
-import 'package:onexray/service/xray/raw/ping.dart';
 
 class PingService {
   static final PingService _singleton = PingService._internal();
@@ -36,27 +34,40 @@ class PingService {
     if (EmptyTool.checkString(row.data)) {
       final outbound = OutboundState();
       outbound.readFromDbData(row);
-      return outbound.ping(pingState);
+      return _tcpPing(outbound.address, outbound.port, pingState);
     }
     return PingDelayConstants.unknown;
   }
 
   Future<void> pingRawConfigs(int subId) async {
-    final eventBus = AppEventBus.instance;
-    eventBus.updatePinging(true);
-    final db = AppDatabase();
-    final rows = await db.coreConfigDao.allRawRowsWithDataBySubId(subId);
-    await _pingConfigs(db, rows);
-    eventBus.updatePinging(false);
+    // Raw JSON configs don't have extractable host/port — skip pinging
   }
 
-  Future<int> _pingRawConfig(CoreConfigData row, PingState pingState) async {
-    if (EmptyTool.checkString(row.data)) {
-      final bytes = base64Decode(row.data!);
-      final text = utf8.decode(bytes);
-      return XrayRawPing.ping(text, pingState);
+  Future<int> _tcpPing(
+    String address,
+    String portStr,
+    PingState pingState,
+  ) async {
+    final port = int.tryParse(portStr);
+    if (address.isEmpty || port == null || port <= 0 || port > 65535) {
+      return PingDelayConstants.unknown;
     }
-    return PingDelayConstants.unknown;
+    final timeoutMs = (pingState.timeout * 1000).toInt();
+    final start = DateTime.now().millisecondsSinceEpoch;
+    try {
+      final socket = await Socket.connect(
+        address,
+        port,
+        timeout: Duration(milliseconds: timeoutMs),
+      );
+      final delay = DateTime.now().millisecondsSinceEpoch - start;
+      socket.destroy();
+      return delay;
+    } on SocketException {
+      return PingDelayConstants.timeout;
+    } catch (_) {
+      return PingDelayConstants.error;
+    }
   }
 
   Future<void> _pingConfigs(AppDatabase db, List<CoreConfigData> rows) async {
@@ -93,10 +104,8 @@ class PingService {
         case CoreConfigType.outbound:
           group.add(_pingOutbound(row, pingState));
           break;
-        case CoreConfigType.raw:
-          group.add(_pingRawConfig(row, pingState));
-          break;
         default:
+          group.add(Future.value(PingDelayConstants.unknown));
           break;
       }
     }
