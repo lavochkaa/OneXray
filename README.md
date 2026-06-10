@@ -1,19 +1,19 @@
-# MIRA VPN
+# OneXray iOS
 
-iOS VPN client based on [Xray-core](https://github.com/XTLS/Xray-core), built for [TrollStore](https://github.com/opa334/TrollStore) installation. Fork of [OneXray](https://github.com/OneXray/OneXray).
+iOS-only fork of [OneXray](https://github.com/OneXray/OneXray) — an Xray-core client built for [TrollStore](https://github.com/opa334/TrollStore) installation (no Apple Developer account required).
 
 ## Requirements
 
 - iOS 15.0+
-- TrollStore 2.x (for unsigned installation)
+- TrollStore 2.x
 
 ## Install
 
-Download `OneXray-unsigned.tipa` from [Releases](../../releases/latest) and open with TrollStore.
+Download `OneXray-unsigned.tipa` from the [Actions](../../actions) tab and open with TrollStore.
 
 ## Build
 
-Builds run automatically via GitHub Actions on every push — download the artifact from the Actions tab.
+GitHub Actions builds on every push — grab the artifact from the Actions tab.
 
 **Manual build:**
 
@@ -40,7 +40,7 @@ mkdir Payload && cp -r build/ios/iphoneos/Runner.app Payload/
 zip -r OneXray-unsigned.tipa Payload/
 ```
 
-## Key patches vs upstream
+## Patches vs upstream
 
 | Area | Change |
 |------|--------|
@@ -48,7 +48,6 @@ zip -r OneXray-unsigned.tipa Payload/
 | **TrollStore NE** | `ldid` entitlement embedding so the Network Extension gets VPN permissions without a developer account |
 | **App Group fallback** | Documents directory fallback when App Group container is unavailable (TrollStore) |
 | **providerConfiguration** | `xrayJson` always embedded so the tunnel extension can start even when the shared container is inaccessible |
-| **Subscription seeding** | Default MIRA subscription auto-imported on first launch |
 
 ## Architecture
 
@@ -61,7 +60,6 @@ swift/
   All/        Shared Swift code + LibXray.xcframework
 ```
 
-The tunnel extension runs in a separate sandboxed process. Data flow:
 - **Pigeon** — Flutter ↔ Swift IPC (generated bindings in `lib/core/pigeon/`)
 - **providerConfiguration** — app embeds `xrayJson` + `request` so the NE can start on demand
 - **handleAppMessage XPC** — app sends dat files + start signal to the tunnel after it connects
