@@ -56,16 +56,72 @@ final class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     }
 
     private func startTunnelLegacy() async throws {
-        guard let request = StartVpnRequest.startModel else {
+        let request: StartVpnRequest
+        if let r = StartVpnRequest.startModel {
+            request = r
+        } else if let provConf = (self.protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration,
+                  let requestData = provConf["request"] as? Data,
+                  let r = try? JSONDecoder().decode(StartVpnRequest.self, from: requestData) {
+            YGLog("startTunnel: startModel nil, using providerConfig request")
+            request = r
+        } else {
             YGLog("startTunnel noStartModel")
             throw TunnelError.noStartModel
         }
         let settings = buildSettings(request: request)
         try await setTunnelNetworkSettings(settings)
         if let coreBase64Text = request.coreBase64Text {
-            try startXray(coreBase64Text)
+            let provConf = (self.protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration
+            let fixedBase64 = fixCoreBase64ForNE(coreBase64Text, providerConfig: provConf)
+            try startXray(fixedBase64)
         }
         YGLog("startTunnel finished")
+    }
+
+    private func fixCoreBase64ForNE(_ original: String, providerConfig: [String: Any]?) -> String {
+        guard let data = Data(base64Encoded: original),
+              var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return original
+        }
+
+        // Check if configPath is accessible; if not, write xrayJson from providerConfig
+        var needsRewrite = false
+        if let configPath = json["configPath"] as? String,
+           !FileManager.default.fileExists(atPath: configPath) {
+            needsRewrite = true
+        }
+
+        if needsRewrite, let provConf = providerConfig,
+           let xrayJsonData = provConf["xrayJson"] as? Data {
+            // Write xray.json to NE-accessible Library/run/
+            let libDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
+            let runDir = libDir.appendingPathComponent("run")
+            try? FileManager.default.createDirectory(at: runDir, withIntermediateDirectories: true)
+            let xrayURL = runDir.appendingPathComponent("xray.json")
+            try? xrayJsonData.write(to: xrayURL)
+            json["configPath"] = xrayURL.path
+            YGLog("fixCoreBase64ForNE: wrote xray.json to \(xrayURL.path)")
+        }
+
+        // Rewrite datDir to parent bundle flutter assets if inaccessible
+        if let datDir = json["datDir"] as? String,
+           !FileManager.default.fileExists(atPath: datDir) {
+            let bundleURL = Bundle.main.bundleURL
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+            let assetsDat = bundleURL
+                .appendingPathComponent("Frameworks/App.framework/flutter_assets/assets/dat")
+                .path
+            if FileManager.default.fileExists(atPath: assetsDat) {
+                json["datDir"] = assetsDat
+                YGLog("fixCoreBase64ForNE: rewrote datDir to \(assetsDat)")
+            }
+        }
+
+        guard let newData = try? JSONSerialization.data(withJSONObject: json) else {
+            return original
+        }
+        return newData.base64EncodedString()
     }
 
     private func startTunnelSE(options: [String: NSObject]?) async throws {

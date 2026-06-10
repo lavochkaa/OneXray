@@ -1,4 +1,5 @@
 import Foundation
+import NetworkExtension
 #if os(iOS)
 import Flutter
 #elseif os(macOS)
@@ -21,9 +22,14 @@ class AppHostApi: BridgeHostApi {
     func getTunFilesDir(completion: @escaping (Result<String, any Error>) -> Void) {
         if let groupUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId()) {
             let path = groupUrl.adaptedPath()
+            YGLog("getTunFilesDir appGroup=\(path)")
             completion(.success(path))
         } else {
-            completion(.success(""))
+            // App Group not provisioned (TrollStore) — fall back to app Documents.
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let path = docs.adaptedPath()
+            YGLog("getTunFilesDir appGroup nil, fallback docs=\(path)")
+            completion(.success(path))
         }
     }
 
@@ -152,9 +158,32 @@ class AppHostApi: BridgeHostApi {
     
     func checkVpnPermission(completion: @escaping (Result<Bool, any Error>) -> Void) {
         Task {
-            await VPNManager.shared.refreshVpn()
+            do {
+                let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+                if managers.isEmpty {
+                    let mgr = NETunnelProviderManager()
+                    let proto = NETunnelProviderProtocol()
+                    proto.providerBundleIdentifier = packetTunnelId()
+                    proto.serverAddress = vpnServerAddress()
+                    mgr.protocolConfiguration = proto
+                    mgr.isEnabled = true
+                    do {
+                        try await mgr.saveToPreferences()
+                        YGLog("checkVpnPermission: permission granted (new profile saved)")
+                        completion(.success(true))
+                    } catch {
+                        YGLog("checkVpnPermission: saveToPreferences failed: \(error)")
+                        completion(.success(false))
+                    }
+                } else {
+                    YGLog("checkVpnPermission: existing profile found count=\(managers.count)")
+                    completion(.success(true))
+                }
+            } catch {
+                YGLog("checkVpnPermission: loadAllFromPreferences failed: \(error)")
+                completion(.success(false))
+            }
         }
-        completion(.success(true))
     }
     
     // android

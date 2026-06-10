@@ -188,7 +188,7 @@ extension XrayHttpupgradeSettingsStandard on XrayHttpupgradeSettings {
 
 extension XrayXhttpSettingsStandard on XrayXhttpSettings {
   static XrayXhttpSettings get standard =>
-      XrayXhttpSettings(null, null, null, null);
+      XrayXhttpSettings(null, null, null, null, null);
 }
 
 extension XrayHysteriaSettingsStandard on XrayHysteriaSettings {

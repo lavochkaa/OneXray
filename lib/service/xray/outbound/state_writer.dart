@@ -284,6 +284,7 @@ extension OutboundStateWriter on OutboundState {
       xhttpSettings.path = xhttpPath;
     }
     xhttpSettings.mode = xhttpMode.name;
+    xhttpSettings.sessionIdFormat = 'random-hex';
 
     if (xhttpExtra.isNotEmpty) {
       xhttpSettings.extra = xhttpExtra;

@@ -51,12 +51,13 @@ struct StartVpnRequest: Codable {
         if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId()) {
             YGLog("tunnel groupURL=\(groupURL)")
             let requestUrl = groupURL.adaptedAppendPath(path: StartModelFile)
-            do {
-                let request = try fromUrl(requestUrl)
-                return request
-            } catch {}
+            if let request = try? fromUrl(requestUrl) { return request }
         }
-        return nil
+        // App Group unavailable (TrollStore) — try main app's Documents dir.
+        let docsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        YGLog("tunnel startModel appGroup failed, trying docs=\(docsURL)")
+        let docsRequestUrl = docsURL.adaptedAppendPath(path: StartModelFile)
+        return try? fromUrl(docsRequestUrl)
     }
 }
 

@@ -46,6 +46,7 @@ class _HomePageState extends State<HomePage>
                 ),
                 title: Text(AppLocalizations.of(context)!.homePageTitle),
                 actions: [
+                  _refreshButton(context, controller, homeState),
                   _rightButton(context, controller, eventState),
                 ],
               ),
@@ -56,6 +57,27 @@ class _HomePageState extends State<HomePage>
           );
         },
       ),
+    );
+  }
+
+  Widget _refreshButton(
+    BuildContext context,
+    HomeController controller,
+    HomeState homeState,
+  ) {
+    if (homeState.refreshing) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    return IconButton(
+      onPressed: () => controller.refreshSubscriptions(context),
+      icon: const Icon(Icons.refresh),
     );
   }
 

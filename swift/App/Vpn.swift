@@ -195,13 +195,14 @@ class VPNManager {
                 if Constants.useSystemExtension {
                     let rewritten = rewriteRequestForExtension(request)
                     encodedRequest = try JSONEncoder().encode(rewritten)
-                    if let xrayJson = readAndRewriteXrayJson() {
-                        providerConfig["xrayJson"] = xrayJson
-                    }
                 } else {
                     encodedRequest = try JSONEncoder().encode(request)
                 }
                 providerConfig["request"] = encodedRequest
+                // Always embed xrayJson so the NE can start even when App Group is unavailable.
+                if let xrayJson = readAndRewriteXrayJson() {
+                    providerConfig["xrayJson"] = xrayJson
+                }
                 conf.providerConfiguration = providerConfig
             } catch {
                 YGLog(error)

@@ -14,6 +14,7 @@ import 'package:onexray/pages/mixin/alert.dart';
 import 'package:onexray/pages/widget/menu_picker.dart';
 import 'package:onexray/service/background_task/service.dart';
 import 'package:onexray/service/share/service.dart';
+import 'package:onexray/service/subscription/service.dart';
 import 'package:onexray/service/toast/service.dart';
 import 'package:onexray/service/vpn/service.dart';
 import 'package:onexray/service/xray/outbound/state.dart';
@@ -21,14 +22,18 @@ import 'package:permission_handler/permission_handler.dart';
 
 class HomeState {
   final int configId;
+  final bool refreshing;
 
-  const HomeState({required this.configId});
+  const HomeState({required this.configId, this.refreshing = false});
 
   factory HomeState.initial() =>
       const HomeState(configId: DBConstants.defaultId);
 
-  HomeState copyWith({int? configId}) {
-    return HomeState(configId: configId ?? this.configId);
+  HomeState copyWith({int? configId, bool? refreshing}) {
+    return HomeState(
+      configId: configId ?? this.configId,
+      refreshing: refreshing ?? this.refreshing,
+    );
   }
 }
 
@@ -179,6 +184,16 @@ class HomeController extends Cubit<HomeState> {
       return;
     }
     await VpnService().startVpn(state.configId);
+  }
+
+  Future<void> refreshSubscriptions(BuildContext context) async {
+    if (state.refreshing) return;
+    emit(state.copyWith(refreshing: true));
+    try {
+      await SubscriptionService().refreshAllSubscription();
+    } finally {
+      if (!isClosed) emit(state.copyWith(refreshing: false));
+    }
   }
 
   @override

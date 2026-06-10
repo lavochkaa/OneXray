@@ -653,6 +653,7 @@ XrayXhttpSettings _$XrayXhttpSettingsFromJson(Map<String, dynamic> json) =>
       json['host'] as String?,
       json['path'] as String?,
       json['mode'] as String?,
+      json['sessionIdFormat'] as String?,
       json['extra'] as Map<String, dynamic>?,
     );
 
@@ -661,6 +662,7 @@ Map<String, dynamic> _$XrayXhttpSettingsToJson(XrayXhttpSettings instance) =>
       'host': ?instance.host,
       'path': ?instance.path,
       'mode': ?instance.mode,
+      'sessionIdFormat': ?instance.sessionIdFormat,
       'extra': ?instance.extra,
     };
 

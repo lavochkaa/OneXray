@@ -14,32 +14,22 @@ jobs:
           repository: lavochkaa/libXray
           path: libXray
 
+      - name: Clone patched Xray-core
+        run: |
+          git clone --depth 1 --branch xhttp-session-id-format \
+            https://github.com/XXcipherX/Xray-core.git /tmp/Xray-core
+
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-
-      - name: Install gomobile
-        run: |
-          go install golang.org/x/mobile/cmd/gomobile@latest
-          gomobile init
-        working-directory: libXray
 
       - name: Tidy modules
         run: go mod tidy
         working-directory: libXray
 
       - name: Build xcframework
-        run: python3 build/main.py apple gomobile
+        run: python3 build/main.py apple go local
         working-directory: libXray
-
-      - name: Debug xcframework build output
-        run: |
-          echo "=== libXray root ==="
-          ls -la libXray/
-          echo "=== xcframeworks found ==="
-          find libXray -name "*.xcframework" -type d | head -20
-          echo "=== xcframework slices ==="
-          find libXray -name "*.xcframework" -type d -exec ls -la {} \; | head -40
 
       - name: Replace xcframework
         run: |
@@ -63,15 +53,24 @@ jobs:
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
 
-      - name: Package IPA
+      - name: Install ldid
+        run: brew install ldid
+
+      - name: Sign binaries with entitlements
+        run: |
+          APP=build/ios/iphoneos/Runner.app
+          ldid -Sios/Runner/Runner.entitlements "$APP/Runner"
+          ldid -Sios/tunnel/tunnel.entitlements "$APP/PlugIns/tunnel.appex/tunnel"
+
+      - name: Package TIPA
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r OneXray-patched.ipa Payload/
+          zip -r OneXray-unsigned.tipa Payload/
 
-      - name: Upload IPA
+      - name: Upload TIPA
         uses: actions/upload-artifact@v4
         with:
-          name: OneXray-patched-ipa
-          path: OneXray-patched.ipa
-          retention-days: 7
+          name: OneXray-unsigned-tipa
+          path: OneXray-unsigned.tipa
+          retention-days: 30

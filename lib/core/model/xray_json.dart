@@ -646,9 +646,10 @@ class XrayXhttpSettings {
   String? host;
   String? path;
   String? mode;
+  String? sessionIdFormat;
   Map<String, dynamic>? extra;
 
-  XrayXhttpSettings(this.host, this.path, this.mode, this.extra);
+  XrayXhttpSettings(this.host, this.path, this.mode, this.sessionIdFormat, this.extra);
 
   factory XrayXhttpSettings.fromJson(Map<String, dynamic> json) =>
       _$XrayXhttpSettingsFromJson(json);
