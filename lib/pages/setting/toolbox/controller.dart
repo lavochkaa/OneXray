@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:onexray/core/constants/preferences.dart';
-import 'package:window_manager/window_manager.dart';
 
 class ToolboxState {
   final bool hideDockIcon;
@@ -25,6 +24,5 @@ class ToolboxController extends Cubit<ToolboxState> {
   Future<void> updateHideDockIcon(bool value) async {
     emit(state.copyWith(hideDockIcon: value));
     await PreferencesKey().saveHideDockIcon(value);
-    await windowManager.setSkipTaskbar(state.hideDockIcon);
   }
 }

@@ -1,80 +1,67 @@
-# OneXray
+# MIRA VPN
 
-[简体中文](./readme/README.zh_CN.md)
+iOS VPN client based on [Xray-core](https://github.com/XTLS/Xray-core), built for [TrollStore](https://github.com/opa334/TrollStore) installation. Fork of [OneXray](https://github.com/OneXray/OneXray).
 
-## App Introduction
+## Requirements
 
-Follow us on Telegram: [OneXray](https://t.me/OneXrayApp)
+- iOS 15.0+
+- TrollStore 2.x (for unsigned installation)
 
-[Documentation](https://onexray.com)
+## Install
 
-[First Run](./readme/FIRST_RUN.md)
+Download `OneXray-unsigned.tipa` from [Releases](../../releases/latest) and open with TrollStore.
 
-## Download
+## Build
 
-| Operating System | Version                | CPU Architecture     | Installation Package Format | Download Link                                                                                                              |
-| ---------------- | ---------------------- | -------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Windows          | Windows 10, Windows 11 | x86_64               | exe                         | [OneXray-windows-amd64.exe](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-windows-amd64.exe)         |
-| Windows          | Windows 10, Windows 11 | x86_64               | zip                         | [OneXray-windows-amd64.zip](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-windows-amd64.zip)         |
-| Android          | Android 10.0 and above | arm32, arm64, x86_64 | aab                         | [Google Play Store](https://play.google.com/store/apps/details?id=net.yuandev.onexray)                                     |
-| Android          | Android 10.0 and above | arm32, arm64, x86_64 | apk                         | [OneXray-android-universal.apk](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-android-universal.apk) |
-| iOS              | iOS 15.0 and above     | arm64                | ipa                         | [App Store](https://apps.apple.com/us/app/onexray/id6745748773)                                                            |
-| iOS              | iOS 15.0 and above     | arm64                | ipa                         | [OneXray-ios.ipa](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-ios.ipa)                             |
-| macOS            | macOS 12.0 and above   | Apple silicon, Intel | pkg                         | [Mac App Store](https://apps.apple.com/us/app/onexray/id6745748773)                                                        | \ |
-| macOS            | macOS 12.0 and above   | Apple silicon, Intel | zip                         | [OneXray-macos-universal.zip](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-macos-universal.zip)     |
-| Linux            | GLIBC >= 2.39          | x86_64               | deb                         | [OneXray-linux-x86_64.deb](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-linux-x86_64.deb)           |
-| Linux            | GLIBC >= 2.39          | x86_64               | zip                         | [OneXray-linux-x86_64.zip](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-linux-x86_64.zip)           |
-| Linux            | GLIBC >= 2.39          | arm64                | deb                         | [OneXray-linux-aarch64.deb](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-linux-aarch64.deb)         |
-| Linux            | GLIBC >= 2.39          | arm64                | zip                         | [OneXray-linux-aarch64.zip](https://github.com/OneXray/OneXray/releases/latest/download/OneXray-linux-aarch64.zip)         |
+Builds run automatically via GitHub Actions on every push — download the artifact from the Actions tab.
 
-## Notes
+**Manual build:**
 
-### iOS
+```bash
+# 1. Clone patched Xray-core (adds sessionIdFormat field to xhttp)
+git clone --branch xhttp-session-id-format https://github.com/XXcipherX/Xray-core.git ../Xray-core
 
-If you don't have an Apple ID, or your Apple ID cannot download OneXray, you can download **OneXray-ios.ipa** and then use [AltStore](https://altstore.io/) or other third-party tools to install it.
+# 2. Clone and build libXray (CGo mode — NOT gomobile)
+git clone https://github.com/lavochkaa/libXray.git
+cd libXray && python3 build/main.py apple go local && cd ..
+cp -r libXray/LibXray.xcframework swift/All/LibXray.xcframework
 
-### Linux
+# 3. Flutter build
+flutter pub get
+cd ios && pod install && cd ..
+flutter build ios --release --no-codesign
 
-If you use the zip package, you need to make the following settings to use OneXray normally.
+# 4. Sign with ldid (required for TrollStore Network Extension permissions)
+ldid -Sios/Runner/Runner.entitlements build/ios/iphoneos/Runner.app/Runner
+ldid -Sios/tunnel/tunnel.entitlements build/ios/iphoneos/Runner.app/PlugIns/tunnel.appex/tunnel
 
-Please confirm the directory before executing the command.
-
-```shell
-sudo apt install -y procps libcap2-bin libayatana-appindicator3-1
-sudo setcap cap_net_admin,cap_net_raw+eip OneXray/bin/OneXrayCore
+# 5. Package as .tipa
+mkdir Payload && cp -r build/ios/iphoneos/Runner.app Payload/
+zip -r OneXray-unsigned.tipa Payload/
 ```
 
-If you use the deb package, you can use the following commands to install and uninstall.
+## Key patches vs upstream
 
-```shell
-sudo apt install ./OneXray-linux-x86_64.deb
-sudo apt remove onexray
+| Area | Change |
+|------|--------|
+| **xhttp CDN** | `sessionIdFormat: random-hex` on all xhttp outbounds — prevents CDN WAF from blocking UUID-shaped session IDs |
+| **TrollStore NE** | `ldid` entitlement embedding so the Network Extension gets VPN permissions without a developer account |
+| **App Group fallback** | Documents directory fallback when App Group container is unavailable (TrollStore) |
+| **providerConfiguration** | `xrayJson` always embedded so the tunnel extension can start even when the shared container is inaccessible |
+| **Subscription seeding** | Default MIRA subscription auto-imported on first launch |
+
+## Architecture
+
+```
+lib/          Flutter/Dart app
+ios/          iOS Xcode project (Runner + tunnel extension)
+swift/
+  App/        Swift app-side code (VPN manager, pigeon host API)
+  Tunnel/     Network Extension (PacketTunnelProvider)
+  All/        Shared Swift code + LibXray.xcframework
 ```
 
-If your desktop environment is gnome, please install the [AppIndicator](https://github.com/ubuntu/gnome-shell-extension-appindicator) extension.
-
-If your machine's CPU architecture is Arm64, switching the language to a CJK language (Chinese, Japanese, or Korean) will cause OneXray to reset the interface language to English.
-
-### Kernel Upgrade
-
-On Linux and Windows platforms, you can upgrade or replace Xray-core yourself. You can compile it using the build script according to the instructions in [libXray](https://github.com/XTLS/libXray).
-
-#### Linux
-
-Replace `OneXray/lib/libXray.so` with the compiled product of libXray `linux_so/libXray.so`.
-
-Replace `OneXray/bin/OneXrayCore` with the compiled product of libXray `bin/xray`.
-
-#### Windows
-
-Replace `OneXray/libXray.dll` with the compiled product of libXray `windows_dll/libXray.dll`.
-
-Replace `OneXray/bin/OneXrayCore.exe` with the compiled product of libXray `bin/xray.exe`.
-
-## Contribution
-
-If this project is helpful to you, you can consider contributing to this project in the following ways.
-
-1. Give this project a star.
-2. Translate the app's documentation [onexray.com](https://github.com/OneXray/onexray.com) .
-3. Share your routing settings [Routing](https://github.com/OneXray/Routing) .
+The tunnel extension runs in a separate sandboxed process. Data flow:
+- **Pigeon** — Flutter ↔ Swift IPC (generated bindings in `lib/core/pigeon/`)
+- **providerConfiguration** — app embeds `xrayJson` + `request` so the NE can start on demand
+- **handleAppMessage XPC** — app sends dat files + start signal to the tunnel after it connects

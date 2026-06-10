@@ -1,8 +1,5 @@
-import 'dart:ffi';
-
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:onexray/core/tools/platform.dart';
 import 'package:onexray/service/localizations/service.dart';
 
 enum ThemeCode {
@@ -107,13 +104,6 @@ enum LanguageCode {
   }
 
   Locale _checkCJKLocale(Locale locale) {
-    if (locale.languageCode == "zh" ||
-        locale.languageCode == "ja" ||
-        locale.languageCode == "ko") {
-      if (AppPlatform.isLinux && Abi.current() == Abi.linuxArm64) {
-        return Locale(LanguageCode.en.name);
-      }
-    }
     return locale;
   }
 
