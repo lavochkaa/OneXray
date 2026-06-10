@@ -7,6 +7,10 @@ import 'package:onexray/pages/main/router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   BridgeFlutterApi.setUp(AppFlutterApi());
-  await AppHostApi().initTunFilesDir();
+  try {
+    await AppHostApi().initTunFilesDir();
+  } catch (_) {
+    // Pigeon channel not ready — continue without cached tun dir
+  }
   runApp(GoRouteApp());
 }

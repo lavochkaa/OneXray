@@ -44,13 +44,6 @@ jobs:
       - name: Install deps
         run: flutter pub get
 
-      - name: Install CocoaPods
-        run: pod install
-        working-directory: ios
-
-      - name: Patch device_info_plus
-        run: python3 -c "import glob,os; [open(f,'w').write(open(f).read().replace('processInfo.isiOSAppOnVision','NO')) for f in glob.glob(os.path.expanduser('~/.pub-cache/**/FPPDeviceInfoPlusPlugin.m'),recursive=True)]"
-
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
 
